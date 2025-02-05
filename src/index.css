@@ -1,0 +1,393 @@
+:root {
+  /* Font Families */
+  --font-family-primary: "Arial", sans-serif;
+
+  /* Font Sizes */
+  --font-size-0: 22px;
+  --font-size-1: 30px;
+  --font-size-2: 50px;
+  --font-size-3: 70px;
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-bold: 500;
+
+  /* Container Colors */
+  --container-color-layer-0: rgb(255, 255, 255);
+  --container-color-layer-1: rgb(240, 240, 240);
+  --container-color-layer-2: rgb(225, 225, 225);
+  --container-color-layer-3: rgb(210, 210, 210);
+  --container-color-layer-4: rgb(195, 195, 195);
+  --container-color-layer-5: rgb(180, 180, 180);
+  
+  
+
+  /* Text Colors */
+  --color-primary-light: rgb(233, 232, 233);
+  --color-muted-light: rgb(218, 219, 218);
+
+  --color-primary-dark: rgb(91, 91, 91);
+  --color-muted-dark: rgb(76, 76, 76);
+
+  --color-max-light: rgb(255, 255, 255);
+  --color-max-dark: rgb(0, 0, 0);
+
+  --color-danger: rgb(229, 115, 115);
+
+  --border-radius: 14px;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  display: flex;
+  justify-content: center;
+}
+
+
+body {
+  font-family: var(--font-family-primary);
+  margin: 0;
+  background-color: #ffffff;
+  overflow-y: scroll;
+}
+
+
+.container {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  align-items: center;
+  justify-content: center;
+}
+
+.content-container {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  width: 500px;
+  padding: 20px;
+}
+
+.header h1 {
+  font-size: var(--font-size-3);
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  margin: 0;
+}
+
+
+.header p {
+  margin: 10px 0;
+  font-size: var(--font-size-1);
+  font-weight: 800;
+  color: var(--color-primary-dark);
+}
+
+.button-container {
+  margin: 20px 0;
+}
+
+button {
+  width: 100%;
+  padding: 40px;
+  margin: 10px 0;
+  font-size: var(--font-size-1);
+  font-weight: 800;
+  border: none;
+  border-radius: 100px; /* Fully rounded edges */
+  cursor: pointer;
+}
+
+
+.submit-btn {
+  background-color: var(--color-muted-dark);
+  color: var(--color-primary-light);
+}
+
+.submit-btn:hover {
+  background-color: var(--color-primary-dark);
+  color: var(--color-primary-light);
+}
+
+.receive-btn {
+  background-color: var(--color-primary-light);
+  color: var(--color-muted-dark);
+}
+
+.receive-btn:hover {
+  background-color: var(--color-muted-light);
+  color: var(--color-muted-dark);
+}
+
+.footer {
+  font-size: var(--font-size-0);
+  color: var(--color-primary-dark);
+  margin-top: 20px;
+}
+
+.container-cancelbutton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.goHomePageButton{
+  width: 200px;
+  padding: 10px;
+  margin: 20px 0px;
+  font-size: var(--font-size-0);
+  color: var(--color-muted-dark);
+  font-weight: 800;
+  border: none;
+  border-radius: var(--border-radius); /* Fully rounded edges */
+  cursor: pointer;
+}
+
+.goHomePageButton:hover{
+ background-color: var(--color-primary-light);
+}
+
+.text-link {
+  text-decoration: none;
+  font-weight: bold;
+  color: var(--color-primary-dark);
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+/* Submission Form */
+.form-container{
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 15px; /* Adds a 10px gap between form elements */
+}
+
+.input-section-one {
+  margin-bottom: 20px;
+}
+
+.input-section-one-group {
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  min-width: 0; /* Prevents sections from exceeding the container width */
+  padding: 20px;
+  border: 1px solid var(--container-color-layer-2);
+  border-radius: var(--border-radius);
+  box-sizing: border-box;
+  color: var(--color-muted-dark);
+  background-color: var(--container-color-layer-1);
+  gap: 2px;
+}
+
+.input-section-one label {
+  display: block;
+  font-size: var(--font-size--1);
+}
+
+.input-section-one input {
+  width: 100%; /* Make sure the input stretches to the full width of the parent */
+  border: none;
+  box-sizing: border-box;
+  color: var(--color-muted-dark);
+  background-color: transparent;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-1);
+  font-weight: var(--font-weight-normal);
+  margin: 0;
+  padding: 0;
+}
+
+.input-section-one-group.error {
+  border: 1px solid var(--color-danger);
+}
+
+.input-section-one input:hover {
+  color: var(--color-primary-dark);
+}
+
+
+.input-section-one input:focus {
+  color: var(--color-primary-dark);
+  outline: none; /* Also removes the default outline */
+}
+
+.input-section-one input::placeholder {
+  color: var(--color-muted-dark); /* Default placeholder color */
+}
+
+.input-section-one input:focus::placeholder {
+  color: var(--color-muted-dark); /* Change placeholder color when clicked (focused) */
+}
+
+.users-input {
+  display: flex;
+  position: relative;
+  align-items: flex-start; /* Aligns items at the top */
+}
+
+.text-danger {
+  margin: 5px;
+  font-size: var(--font-size--1);
+  color: var(--color-danger);
+}
+
+.form-title {
+  font-size: var(--font-size-1);
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  margin: 0;
+  margin-bottom: 20px;
+  margin-top: 100px;
+  padding: 0px 10px;
+}
+
+/* SubmissionComplete */
+.submission-complete-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  margin: 0px 100px;
+  text-align: left;
+}
+
+.submission-complete-container h1 {
+  font-size: var(--font-size-3);
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  margin: 0;
+  padding: 0px 70px;
+  
+}
+
+.submission-complete-container p {
+  margin: 10px 0;
+  font-size: var(--font-size-2);
+  color: var(--color-primary-dark);
+
+  padding: 0px 70px;
+}
+
+.countdown-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.countdown-circle {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  border: 5px solid #4caf50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.countdown-circle span {
+  font-size: 2rem;
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.countdown-timer p {
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #555;
+}
+
+/*idlePage.jsx*/
+.idle-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+  background-color: var(--container-color-layer-0);
+  cursor: pointer;
+}
+
+.idle-content {
+  text-align: center;
+}
+
+.idle-content h1 {
+  font-size: var(--font-size-3);
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  margin: 0;
+}
+
+.idle-content p {
+  margin: 10px 0;
+  font-size: var(--font-size-1);
+  font-weight: 800;
+  color: var(--color-primary-dark);
+}
+
+
+.resend-otp {
+  display: flex;
+  justify-content: center;
+}
+
+.resend-otp p {
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.resend-otp p.inactive {
+  cursor: not-allowed;
+  color: #999; /* Lighter color */
+}
+
+.hr-horizontal {
+  border: none;
+  border-top: 1px solid var(--color-primary-light);
+}
+
+/* Terms and Conditions */
+.terms-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  color: var(--color-primary-dark);
+}
+
+.terms-container h1 {
+  text-align: center;
+  font-size: var(--font-size-2);
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: var(--font-size-1);
+  color: var(--color-primary-dark);
+  margin-top: 20px;
+}
+
+p, li {
+  font-size: var(--font-size-0);
+  line-height: 1.6;
+}
+
+ul {
+  padding-left: 20px;
+}
+
