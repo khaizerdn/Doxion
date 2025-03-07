@@ -1,0 +1,8 @@
+/* app.css */
+
+/* Basic container for the App component */
+.app-container {
+    max-width: 1200px; /* Sets a maximum width for the content */
+    margin: 0 auto; /* Centers the container */
+    padding: 20px; /* Adds padding inside the container */
+  }

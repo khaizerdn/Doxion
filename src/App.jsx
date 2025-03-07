@@ -1,11 +1,8 @@
-import './App.css'
-
 function App() {
-
   return (
-    <>
-    </>
-  )
+    <div className="app-container">
+      {/* Your app content here */}
+    </div>
+  );
 }
-
-export default App
+export default App;
