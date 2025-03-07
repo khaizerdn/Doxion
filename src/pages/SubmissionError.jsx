@@ -7,8 +7,14 @@ import LoadingScreen from './loadingscreen';
 function SubmissionForm({ onFormSubmit, goBack }) {
     const [errors, setErrors] = useState({});
     const [values, setValues] = useState(() => {
+        const storedValues = sessionStorage.getItem("submissionFormValues");
+        if (storedValues) {
+            console.log("Restoring values from sessionStorage:", JSON.parse(storedValues));
+            return JSON.parse(storedValues);
+        }
         const selectedEmail = sessionStorage.getItem("selectedRecipientEmail") || "";
         const selectedLockerNumber = sessionStorage.getItem("selectedLockerNumber") || "";
+        console.log("Initializing new values with:", { selectedEmail, selectedLockerNumber });
         return {
             firstName: "",
             lastName: "",
@@ -27,19 +33,30 @@ function SubmissionForm({ onFormSubmit, goBack }) {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
-    // Function to clear sessionStorage except for the "email" key
-    const clearSessionStorageExceptEmail = () => {
-        const email = sessionStorage.getItem("email"); // Preserve the email value
-        sessionStorage.clear(); // Clear all items
+    // Function to clear sessionStorage except for "email" and "submissionFormValues"
+    const clearSessionStorageExceptEmailAndValues = () => {
+        const email = sessionStorage.getItem("email");
+        const formValues = sessionStorage.getItem("submissionFormValues");
+        sessionStorage.clear();
         if (email) {
-            sessionStorage.setItem("email", email); // Restore the email
+            sessionStorage.setItem("email", email);
+        }
+        if (formValues) {
+            sessionStorage.setItem("submissionFormValues", formValues);
         }
     };
 
-    // Clear session storage (except "email") when navigating away from this page
+    // Save values to sessionStorage whenever they change
+    useEffect(() => {
+        console.log("Updating sessionStorage with values:", values);
+        sessionStorage.setItem("submissionFormValues", JSON.stringify(values));
+    }, [values]);
+
+    // Clear session storage (except "email" and "submissionFormValues") when navigating away
     useEffect(() => {
         return () => {
-            clearSessionStorageExceptEmail();
+            console.log("Unmounting SubmissionForm, preserving email and form values");
+            clearSessionStorageExceptEmailAndValues();
         };
     }, []);
 
@@ -83,7 +100,8 @@ function SubmissionForm({ onFormSubmit, goBack }) {
             setErrors({});
             onFormSubmit();
             setIsLoading(false);
-            // Note: No sessionStorage.clear() here; handled by useEffect cleanup
+            // Optionally clear form values after successful submission
+            // sessionStorage.removeItem("submissionFormValues");
         } catch (error) {
             setIsLoading(false);
             setErrorMessage('There was an error submitting your credentials. Please try again.');

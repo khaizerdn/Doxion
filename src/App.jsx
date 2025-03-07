@@ -1,19 +1,22 @@
+// App.js
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import IdlePage from './pages/idlePage';
-import UserVerification from './pages/UserVerification';
+import UserVerification from './pages/userVerification';
 import OTPVerification from './pages/OTPVerification';
 import SubmissionForm from './pages/SubmissionForm';
 import SubmissionComplete from './pages/SubmissionComplete';
 import ReceiveForm from './pages/ReceiveForm';
 import ReceiveComplete from './pages/ReceiveComplete';
 import TermsAndConditions from './pages/TermsAndConditions';
+import Recipient from './pages/Recipient'; // New page for Recipient Email Address
+import LockerNumber from './pages/LockerNumber'; // New page for Locker Number
 
 function App() {
   const [step, setStep] = useState(0);
   const [processType, setProcessType] = useState('');
   const [userEmail, setUserEmail] = useState('');
-  const [idleTime, setIdleTime] = useState(60); // Set initial idle time to 10 seconds
+  const [idleTime, setIdleTime] = useState(9999999); // Set initial idle time to a large number
 
   const handleStart = () => setStep(1);
   const handleSubmitClick = () => { setProcessType('submit'); setStep(2); };
@@ -22,7 +25,7 @@ function App() {
   const handleOTPComplete = () => setStep(4);
   const handleFormSubmit = () => setStep(5);
   const goBack = () => setStep(0); // Go back to IdlePage (step 0)
-  const resetIdleTimer = () => setIdleTime(60); // Reset idle time to 10 seconds
+  const resetIdleTimer = () => setIdleTime(9999999); // Reset idle time
 
   // Idle timer logic
   useEffect(() => {
@@ -48,12 +51,14 @@ function App() {
       clearInterval(idleInterval);
       ['mousemove', 'keydown', 'click'].forEach(event => window.removeEventListener(event, resetEvents));
     };
-  }, [step]); // Re-run effect when step changes
+  }, [step]);
 
   return (
     <Router>
       <Routes>
         <Route path="/terms" element={<TermsAndConditions />} />
+        <Route path="/recipient" element={<Recipient />} />
+        <Route path="/lockernumber" element={<LockerNumber />} />
         <Route path="/" element={
           <div className="container">
             {step === 0 && <IdlePage onStart={handleStart} idleTime={idleTime} />}
@@ -69,7 +74,9 @@ function App() {
                     <button className="receive-btn" onClick={handleReceiveClick}>RECEIVE</button>
                   </div>
                   <footer className="footer">
-                    <p>By using the Doxion locker, you acknowledge and accept the <Link to="/terms" className='text-link'>terms and conditions</Link> for submitting or receiving documents.</p>
+                    <p>
+                      By using the Doxion locker, you acknowledge and accept the <Link to="/terms" className='text-link'>terms and conditions</Link> for submitting or receiving documents.
+                    </p>
                   </footer>
                 </div>
               </div>
