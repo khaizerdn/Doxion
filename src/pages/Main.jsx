@@ -1,9 +1,10 @@
-// src/pages/Main/MainPage.jsx
+// src/pages/Main/Main.jsx
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 import Button from './components/Button';
 import SubmissionSteps from '../utils/SubmissionSteps';
 
-function MainPage() {
+function Main() {
   const [showSubmissionSteps, setShowSubmissionSteps] = useState(false);
 
   const mainStyles = `
@@ -14,6 +15,13 @@ function MainPage() {
       margin-top: 20px;
       line-height: 1.6;
       width: 100%;
+    }
+    .terms-link {
+      color: var(--text-accent); /* Use accent color for link */
+      text-decoration: none; /* Remove default underline */
+    }
+    .terms-link:hover {
+      text-decoration: underline; /* Add underline on hover for better UX */
     }
   `;
 
@@ -26,7 +34,7 @@ function MainPage() {
         <div className="main-container">
           <div className="content-wrapper">
             <h1>DOXION</h1>
-            <h2>We find ways to submit</h2>
+            <h2>We find ways to submit シ</h2>
             <Button type="primary" onClick={() => setShowSubmissionSteps(true)}>
               SUBMIT
             </Button>
@@ -34,8 +42,11 @@ function MainPage() {
               RECEIVE
             </Button>
             <div className="disclaimer">
-              By using the Doxion locker, you acknowledge and accept the terms and
-              conditions for submitting or receiving documents.
+              By using the Doxion locker, you acknowledge and accept the{' '}
+              <Link to="/termsandconditions" className="terms-link">
+                <strong>terms and conditions</strong>
+              </Link>{' '}
+              for submitting or receiving documents.
             </div>
           </div>
         </div>
@@ -44,4 +55,4 @@ function MainPage() {
   );
 }
 
-export default MainPage;
+export default Main;

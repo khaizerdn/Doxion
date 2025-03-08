@@ -1,7 +1,7 @@
 // src/components/SubmissionSteps.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import EmailStep from '../pages/EmailStep';
+import ConfirmEmail from '../pages/ConfirmEmail';
 import CloseButton from '../pages/components/CloseButton';
 
 const SubmissionSteps = ({ onClose }) => {
@@ -24,7 +24,7 @@ const SubmissionSteps = ({ onClose }) => {
 
         </div>
         {currentStep === 1 && (
-          <EmailStep
+          <ConfirmEmail
             onNext={handleNext}
             onClose={onClose}
             initialData={{ email: formData.email }}

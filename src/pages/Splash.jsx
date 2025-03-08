@@ -1,7 +1,7 @@
-// src/pages/Splash/SplashPage.jsx
+// src/pages/Splash/Splash.jsx
 import { useNavigate } from 'react-router-dom';
 
-function SplashPage() {
+function Splash() {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -47,4 +47,4 @@ function SplashPage() {
   );
 }
 
-export default SplashPage;
+export default Splash;

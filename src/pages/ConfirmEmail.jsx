@@ -1,9 +1,9 @@
-// src/components/EmailStep.jsx
+// src/components/ConfirmEmail.jsx
 import React, { useState } from 'react';
 import Input from './components/Input';
 import Button from './components/Button';
 
-const EmailStep = ({ onNext, initialData, onClose }) => {
+const ConfirmEmail = ({ onNext, initialData, onClose }) => {
   const [email, setEmail] = useState(initialData.email || '');
 
   const handleSubmit = () => {
@@ -33,4 +33,4 @@ const EmailStep = ({ onNext, initialData, onClose }) => {
   );
 };
 
-export default EmailStep;
+export default ConfirmEmail;
