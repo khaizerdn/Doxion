@@ -5,41 +5,42 @@
 }
 
 :root {
-  /* Existing Colors */
+  /* Colors */
   --color-primary-dark: rgb(76, 76, 76);
   --color-muted-dark: rgb(91, 91, 91);
-
   --color-primary-light: rgb(233, 232, 233);
   --color-muted-light: rgb(218, 219, 218);
-
-  --font-family: 'Inter', sans-serif;
-
-  /* Lighter gray shades for subtle elevation */
+  
+  /* Elevation shades */
   --elevation-0: rgb(255, 255, 255);
   --elevation-1: rgb(240, 240, 240);
   --elevation-2: rgb(225, 225, 225);
   --elevation-3: rgb(210, 210, 210);
   --elevation-4: rgb(195, 195, 195);
   --elevation-5: rgb(180, 180, 180);
+  
+  /* Typography */
+  --font-family: 'Inter', sans-serif;
+  --text-disabled: #cccccc;
+  --color-error: rgb(255, 99, 99);
+  
+  /* Layout */
+  --global-border-radius: 30px;
+}
 
-  /* Global border radius for fully smooth edges */
-  --global-border-radius: 30px; /* Fully smooth edges for buttons */
-
-  /* Global Font Color Shades */
-  --text-accent: var(--accent-color); /* #ff6f61 - Highlight color for links or CTAs */
-  --text-secondary: var(--secondary-color); /* #6c757d - Neutral mid-tone */
-  --text-disabled: #cccccc; /* Very light gray for disabled text */
-
-  /* Add a soft red for error messages */
-  --color-error: rgb(255, 99, 99); /* Softer red for errors */
+html, body {
+  height: 100%; /* Ensure full height propagation */
+  font-family: var(--font-family);
+  color: var(--color-muted-dark);
 }
 
 body {
-  font-family: var(--font-family);
-  color: var(--color-muted-dark);
-  overflow: hidden; /* Prevent scrolling */
+  margin: 0; /* Reset default margins */
+  overflow-y: scroll; /* Force vertical scrollbar to always be visible */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
+/* Headings */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   color: var(--color-primary-dark);
@@ -50,38 +51,25 @@ h1 {
   font-weight: 900;
   margin-bottom: 10px;
   text-transform: uppercase;
-  width: 100%;
 }
 
 h2 {
   font-size: 2rem;
   font-weight: 900;
   margin-bottom: 20px;
-  width: 100%;
 }
 
-h3 {
-  font-size: 1.75rem;
-}
-
-h4 {
-  font-size: 1.5rem;
-}
-
-h5 {
-  font-size: 1.25rem;
-}
-
-h6 {
-  font-size: 1rem;
-}
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.5rem; }
+h5 { font-size: 1.25rem; }
+h6 { font-size: 1rem; }
 
 p {
   line-height: 1.6;
   color: var(--color-muted-dark);
 }
 
-/* Subtle elevation styles with lighter shadows */
+/* Elevation classes */
 .elevation-1 {
   background-color: var(--elevation-1);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -97,37 +85,39 @@ p {
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
 }
 
+/* Main layout */
 .main-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh; /* Takes at least full viewport height */
   width: 100%;
   padding: 10px;
-  background-color: #ffffff;
-  overflow: hidden;
+  background-color: var(--elevation-0);
 }
 
 .content-wrapper {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-width: 500px;
+  max-width: 700px;
   width: 100%;
+  min-height: 100%; /* Occupies full height of parent */
   text-align: left;
 }
 
+/* Buttons */
 .action-button {
-  display: flex;          /* Makes buttons align in a row */
-  justify-content: space-between; /* Distributes space between buttons */
-  gap: 10px;             /* Adds spacing between buttons */
-  width: 100%;           /* Takes full width of container */
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
 }
 
+/* Error messaging */
 .error-message {
-  color: var(--color-error); /* Use the softer red */
+  color: var(--color-error);
   font-size: 14px;
-  margin-top: 5px;
-  margin-bottom: 10px;
+  margin: 5px 0 10px;
 }

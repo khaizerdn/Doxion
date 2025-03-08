@@ -4,35 +4,11 @@ import { Link } from 'react-router-dom';
 
 function TermsAndConditions() {
   const termsStyles = `
-    .terms-container {
-      position: fixed; /* Fix to viewport */
-      top: 0;
-      left: 0;
-      width: 100vw; /* Full viewport width */
-      height: 100vh; /* Full viewport height */
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
-      background-color: var(--elevation-0);
-      overflow-y: auto; /* Enable scrolling on container */
-      padding: 40px 20px; /* Padding inside scrollable area */
-      box-sizing: border-box; /* Include padding in dimensions */
-    }
-    .terms-container::-webkit-scrollbar {
-      width: 8px; /* Slim scrollbar */
-    }
-    .terms-container::-webkit-scrollbar-thumb {
-      background: var(--color-muted-dark);
-      border-radius: 4px;
-    }
-    .terms-container::-webkit-scrollbar-track {
-      background: var(--elevation-1);
-    }
     .terms-content {
-      max-width: 800px; /* Constrain content width */
+      max-width: 700px; /* Constrain content width */
       width: 100%;
       text-align: left;
+      margin: 50px 0px;
     }
     .terms-content h1 {
       font-size: 2.5rem;
@@ -60,7 +36,7 @@ function TermsAndConditions() {
   return (
     <>
       <style>{termsStyles}</style>
-      <div className="terms-container">
+      <div className="main-container">
         <div className="terms-content">
           <h1>Terms and Conditions</h1>
           <p>Last Updated: March 07, 2025</p>
