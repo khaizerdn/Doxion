@@ -1,8 +1,8 @@
 // src/App.jsx
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
-import SplashPage from './pages/Splash/SplashPage';
-import MainPage from './pages/Main/MainPage';
+import SplashPage from './pages/SplashPage';
+import MainPage from './pages/MainPage';
 import { IdleTimeoutHandler } from './utils/useIdleTimeout'; // Import only the handler
 
 function App() {

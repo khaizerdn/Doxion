@@ -1,7 +1,7 @@
 // src/pages/Main/MainPage.jsx
 import React, { useState } from 'react';
-import Button from '../components/Button';
-import SubmissionSteps from '../components/SubmissionSteps';
+import Button from './components/Button';
+import SubmissionSteps from '../utils/SubmissionSteps';
 
 function MainPage() {
   const [showSubmissionSteps, setShowSubmissionSteps] = useState(false);

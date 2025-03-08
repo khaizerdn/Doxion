@@ -1,8 +1,8 @@
 // src/components/SubmissionSteps.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import EmailStep from '../components/EmailStep';
-import CloseButton from '../components/CloseButton';
+import EmailStep from '../pages/EmailStep';
+import CloseButton from '../pages/components/CloseButton';
 
 const SubmissionSteps = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -16,7 +16,7 @@ const SubmissionSteps = ({ onClose }) => {
 
   return (
     <div className="main-container">
-      <CloseButton onClose={onClose} navigate={navigate} />
+      {/* <CloseButton onClose={onClose} navigate={navigate} /> */}
       <div className="content-wrapper">
 
         <div className="step-indicator">

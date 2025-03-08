@@ -23,8 +23,7 @@
   --elevation-4: rgb(195, 195, 195);
   --elevation-5: rgb(180, 180, 180);
   /* Global border radius for fully smooth edges */
-  --global-border-radius: 60px; /* Fully smooth edges for buttons */
-  --global-border-radius-input: 20px; /* Slightly rounded edges for inputs */
+  --global-border-radius: 30px; /* Fully smooth edges for buttons */
 
 
   /* Global Font Color Shades */
@@ -115,4 +114,11 @@ p {
   max-width: 500px;
   width: 100%;
   text-align: left;
+}
+
+.action-button {
+  display: flex;          /* Makes buttons align in a row */
+  justify-content: space-between; /* Distributes space between buttons */
+  gap: 10px;             /* Adds spacing between buttons */
+  width: 100%;           /* Takes full width of container */
 }
