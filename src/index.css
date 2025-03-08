@@ -1,4 +1,3 @@
-/* src/index.css (unchanged) */
 * {
   margin: 0;
   padding: 0;
@@ -22,14 +21,17 @@
   --elevation-3: rgb(210, 210, 210);
   --elevation-4: rgb(195, 195, 195);
   --elevation-5: rgb(180, 180, 180);
+
   /* Global border radius for fully smooth edges */
   --global-border-radius: 30px; /* Fully smooth edges for buttons */
-
 
   /* Global Font Color Shades */
   --text-accent: var(--accent-color); /* #ff6f61 - Highlight color for links or CTAs */
   --text-secondary: var(--secondary-color); /* #6c757d - Neutral mid-tone */
   --text-disabled: #cccccc; /* Very light gray for disabled text */
+
+  /* Add a soft red for error messages */
+  --color-error: rgb(255, 99, 99); /* Softer red for errors */
 }
 
 body {
@@ -121,4 +123,11 @@ p {
   justify-content: space-between; /* Distributes space between buttons */
   gap: 10px;             /* Adds spacing between buttons */
   width: 100%;           /* Takes full width of container */
+}
+
+.error-message {
+  color: var(--color-error); /* Use the softer red */
+  font-size: 14px;
+  margin-top: 5px;
+  margin-bottom: 10px;
 }
