@@ -1,36 +1,62 @@
-/* index.css */
-
-/* Minimal CSS Reset */
+/* src/index.css (unchanged) */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Global Variables */
 :root {
-  --primary-color: #007bff; /* Example primary color */
-  --secondary-color: #6c757d; /* Example secondary color */
-  --font-family: 'Arial, sans-serif'; /* Default font family */
+  /* Existing Colors */
+  --color-primary-dark: rgb(76, 76, 76);
+  --color-muted-dark: rgb(91, 91, 91);
+
+  --color-primary-light: rgb(233, 232, 233);
+  --color-muted-light: rgb(218, 219, 218);
+
+  --font-family: 'Inter', sans-serif;
+
+  /* Lighter gray shades for subtle elevation */
+  --elevation-0: rgb(255, 255, 255);
+  --elevation-1: rgb(240, 240, 240);
+  --elevation-2: rgb(225, 225, 225);
+  --elevation-3: rgb(210, 210, 210);
+  --elevation-4: rgb(195, 195, 195);
+  --elevation-5: rgb(180, 180, 180);
+  /* Global border radius for fully smooth edges */
+  --global-border-radius: 60px; /* Fully smooth edges for buttons */
+  --global-border-radius-input: 20px; /* Slightly rounded edges for inputs */
+
+
+  /* Global Font Color Shades */
+  --text-accent: var(--accent-color); /* #ff6f61 - Highlight color for links or CTAs */
+  --text-secondary: var(--secondary-color); /* #6c757d - Neutral mid-tone */
+  --text-disabled: #cccccc; /* Very light gray for disabled text */
 }
 
-/* Base Styles */
 body {
   font-family: var(--font-family);
-  background-color: #f8f9fa; /* Light background for the entire site */
-  color: #212529; /* Dark text color */
+  color: var(--color-muted-dark);
+  overflow: hidden; /* Prevent scrolling */
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 700; /* Bold font weight for headings */
+  font-weight: 700;
+  color: var(--color-primary-dark);
 }
 
 h1 {
-  font-size: 2.5rem;
+  font-size: 6rem;
+  font-weight: 900;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  width: 100%;
 }
 
 h2 {
   font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 20px;
+  width: 100%;
 }
 
 h3 {
@@ -50,5 +76,43 @@ h6 {
 }
 
 p {
-  line-height: 1.6; /* Improved readability for paragraphs */
+  line-height: 1.6;
+  color: var(--color-muted-dark);
+}
+
+/* Subtle elevation styles with lighter shadows */
+.elevation-1 {
+  background-color: var(--elevation-1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.elevation-2 {
+  background-color: var(--elevation-2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.elevation-3 {
+  background-color: var(--elevation-3);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+  padding: 10px;
+  background-color: #ffffff;
+  overflow: hidden;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 500px;
+  width: 100%;
+  text-align: left;
 }
