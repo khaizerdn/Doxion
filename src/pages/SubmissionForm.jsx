@@ -1,6 +1,5 @@
 // src/pages/SubmissionForm.jsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Input from '../pages/components/Input';
 import Button from '../pages/components/Button';
 import { validateEmail, validateRequired, validateLockerNumber } from '../utils/validators';
@@ -53,7 +52,6 @@ const LockerIcon = () => (
 );
 
 const SubmissionForm = ({ onNext, onClose, initialData }) => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: initialData.firstName || '',
     lastName: initialData.lastName || '',
@@ -179,7 +177,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         />
         <div 
           className="select-icon" 
-          onClick={() => navigate('/select-recipient')}
           title="Select Recipient"
         >
           <SendMailIcon />
@@ -209,7 +206,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         />
         <div 
           className="select-icon" 
-          onClick={() => navigate('/select-locker')}
           title="Select Locker"
         >
           <LockerIcon />
