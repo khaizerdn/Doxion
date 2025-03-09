@@ -71,17 +71,14 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
   const [view, setView] = useState('form'); // 'form', 'recipient', or 'locker'
   const [scrollPosition, setScrollPosition] = useState(0); // Store scroll position
 
-  // Save scroll position when leaving form, restore when returning
+  // Restore scroll position when returning to form view
   useEffect(() => {
     if (view === 'form') {
-      console.log(`Returning to form, restoring scroll to: ${scrollPosition}`);
-      // Delay restoration to ensure DOM is fully rendered
       setTimeout(() => {
         window.scrollTo({ top: scrollPosition, behavior: 'instant' });
-        console.log(`Scroll restored, current scrollY: ${window.scrollY}`);
       }, 0);
     }
-  }, [view]); // Only trigger on view change, not scrollPosition
+  }, [view]);
 
   const handleChange = (field) => (e) => {
     setFormData(prev => ({
@@ -100,27 +97,24 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       lockerNumber: newData.lockerNumber || prev.lockerNumber,
       recipientEmail: newData.recipientEmail || prev.recipientEmail
     }));
-    setView('form'); // Scroll restoration handled by useEffect
+    setView('form');
   };
 
   const handleViewChange = (newView) => {
     if (view === 'form') {
-      const currentScroll = window.scrollY;
-      console.log(`Leaving form for ${newView}, saving scroll position: ${currentScroll}`);
-      setScrollPosition(currentScroll);
+      setScrollPosition(window.scrollY);
     }
     setView(newView);
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    
-    newErrors.firstName = validateRequired(formData.firstName, 'First Name').error;
-    newErrors.lastName = validateRequired(formData.lastName, 'Last Name').error;
-    newErrors.recipientEmail = validateEmail(formData.recipientEmail).error;
-    newErrors.note = validateRequired(formData.note, 'Note').error;
-    newErrors.lockerNumber = validateLockerNumber(formData.lockerNumber).error;
-
+    const newErrors = {
+      firstName: validateRequired(formData.firstName, 'First Name').error,
+      lastName: validateRequired(formData.lastName, 'Last Name').error,
+      recipientEmail: validateEmail(formData.recipientEmail).error,
+      note: validateRequired(formData.note, 'Note').error,
+      lockerNumber: validateLockerNumber(formData.lockerNumber).error
+    };
     setErrors(newErrors);
     return Object.values(newErrors).every(error => !error);
   };
@@ -130,12 +124,13 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     onNext(formData);
   };
 
-  const inputStyles = `
+  // Styles for inputs and textarea
+  const styles = `
     .input-wrapper {
       display: flex;
       align-items: center;
       width: 100%;
-      height: 120px;
+      height: var(--global-input-height);
       margin: 10px 0;
       border: 1px solid ${errors.recipientEmail || errors.lockerNumber ? 'var(--color-error)' : 'var(--elevation-3)'};
       border-radius: var(--global-border-radius);
@@ -145,7 +140,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       transition: border-color 0.3s ease;
     }
     .input-wrapper:focus-within {
-      border-color: ${errors.recipientEmail || errors.lockerNumber ? 'var(--color-error)' : 'var(--elevation-3)'};
+      border-color: ${errors.recipientEmail || errors.lockerNumber ? 'var(--color-error)' : 'var(--color-primary)'};
     }
     .input-wrapper .input-field {
       flex: 1;
@@ -173,9 +168,36 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     .input-wrapper .select-icon:hover {
       background-color: var(--elevation-2);
     }
+    .textarea-note {
+      width: 100%;
+      min-height: 120px;
+      padding: 30px; /* Match Input.jsx */
+      padding-top: 40px; /* Adjusted for vertical centering */
+      padding-bottom: 0px; /* Adjusted for vertical centering */
+      margin: 10px 0;
+      font-size: 2rem; /* Match Input.jsx */
+      font-family: inherit; /* Match Input.jsx */
+      font-weight: normal; /* Match default */
+      color: var(--color-muted-dark); /* Match Input.jsx */
+      background-color: var(--elevation-1);
+      border: 1px solid ${errors.note ? 'var(--color-error)' : 'var(--elevation-3)'};
+      border-radius: var(--global-border-radius);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.3s ease;
+      text-align: left; /* Explicitly left-aligned */
+      line-height: normal; /* Default line spacing */
+      box-sizing: border-box; /* Ensure padding doesn't increase height */
+    }
+    .textarea-note:focus {
+      border-color: ${errors.note ? 'var(--color-error)' : 'var(--color-primary)'};
+    }
+    .textarea-note::placeholder {
+      color: var(--color-muted-light); /* Match Input.jsx */
+    }
   `;
 
-  // Render different views based on state
   if (view === 'recipient') {
     return <SelectRecipient onSelect={handleFieldUpdate} onBack={() => handleViewChange('form')} />;
   }
@@ -185,7 +207,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
   return (
     <>
-      <style>{inputStyles}</style>
+      <style>{styles}</style>
       <h2>SUBMISSION FORM</h2>
       
       <Input
@@ -228,14 +250,16 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         <p className="error-message" aria-live="polite">{errors.recipientEmail}</p>
       )}
 
-      <Input
+      <textarea
+        className="textarea-note"
         placeholder="Note"
         value={formData.note}
         onChange={handleChange('note')}
-        emailError={errors.note}
+        aria-invalid={!!errors.note}
+        aria-describedby={errors.note ? 'note-error' : undefined}
       />
       {errors.note && (
-        <p className="error-message" aria-live="polite">{errors.note}</p>
+        <p id="note-error" className="error-message" aria-live="polite">{errors.note}</p>
       )}
 
       <div className="input-wrapper" tabIndex={0}>

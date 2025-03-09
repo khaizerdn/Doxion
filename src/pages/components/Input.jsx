@@ -1,7 +1,7 @@
+// src/pages/components/Input.jsx
 import React from 'react';
 
 const Input = ({ placeholder, value, onChange, emailError, className = '' }) => {
-  // Define input styles dynamically based on emailError
   const inputStyles = `
     .input-field {
       width: 100%;
@@ -26,6 +26,12 @@ const Input = ({ placeholder, value, onChange, emailError, className = '' }) => 
     .input-field:invalid {
       border-color: var(--color-error); /* Fallback for native validation */
     }
+    /* When inside input-wrapper, remove border and adjust styles */
+    .input-wrapper .input-field {
+      border: none;
+      background: transparent;
+      border-radius: var(--global-border-radius) 0 0 var(--global-border-radius);
+    }
   `;
 
   return (
@@ -37,7 +43,8 @@ const Input = ({ placeholder, value, onChange, emailError, className = '' }) => 
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        aria-invalid={emailError ? 'true' : 'false'} // Accessibility attribute
+        aria-invalid={emailError ? 'true' : 'false'}
+        aria-describedby={emailError ? `${placeholder.toLowerCase().replace(' ', '-')}-error` : undefined}
       />
     </>
   );
