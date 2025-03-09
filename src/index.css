@@ -105,6 +105,7 @@ p {
   width: 100%;
   min-height: 100%; /* Occupies full height of parent */
   text-align: left;
+  margin: 50px 0;
 }
 
 /* Buttons */

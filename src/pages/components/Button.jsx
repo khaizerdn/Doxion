@@ -1,3 +1,4 @@
+// src/components/Button.jsx (example path)
 import React, { useState } from 'react';
 
 const Button = ({ type, children, onClick, width = '100%', height = '120px', fontSize = '2rem' }) => {

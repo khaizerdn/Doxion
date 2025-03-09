@@ -1,7 +1,8 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
+// .eslintrc.js
+import js from '@eslint/js';
+import globals from 'globals';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default [
   { ignores: ['dist'] },
@@ -30,4 +31,13 @@ export default [
       ],
     },
   },
-]
+  // Add this overrides section for vite.config.js
+  {
+    files: ['vite.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node, // Include Node.js globals like process
+      },
+    },
+  },
+];
