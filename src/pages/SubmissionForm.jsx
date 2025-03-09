@@ -1,7 +1,9 @@
 // src/pages/SubmissionForm.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Input from '../pages/components/Input';
 import Button from '../pages/components/Button';
+import SelectRecipient from './SelectRecipient';
+import SelectLocker from './SelectLocker';
 import { validateEmail, validateRequired, validateLockerNumber } from '../utils/validators';
 
 // Send Mail SVG Icon (Envelope)
@@ -59,7 +61,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     note: initialData.note || '',
     lockerNumber: initialData.lockerNumber || ''
   });
-  
   const [errors, setErrors] = useState({
     firstName: '',
     lastName: '',
@@ -67,6 +68,20 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     note: '',
     lockerNumber: ''
   });
+  const [view, setView] = useState('form'); // 'form', 'recipient', or 'locker'
+  const [scrollPosition, setScrollPosition] = useState(0); // Store scroll position
+
+  // Save scroll position when leaving form, restore when returning
+  useEffect(() => {
+    if (view === 'form') {
+      console.log(`Returning to form, restoring scroll to: ${scrollPosition}`);
+      // Delay restoration to ensure DOM is fully rendered
+      setTimeout(() => {
+        window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+        console.log(`Scroll restored, current scrollY: ${window.scrollY}`);
+      }, 0);
+    }
+  }, [view]); // Only trigger on view change, not scrollPosition
 
   const handleChange = (field) => (e) => {
     setFormData(prev => ({
@@ -77,6 +92,24 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       ...prev,
       [field]: ''
     }));
+  };
+
+  const handleFieldUpdate = (newData) => {
+    setFormData(prev => ({
+      ...prev,
+      lockerNumber: newData.lockerNumber || prev.lockerNumber,
+      recipientEmail: newData.recipientEmail || prev.recipientEmail
+    }));
+    setView('form'); // Scroll restoration handled by useEffect
+  };
+
+  const handleViewChange = (newView) => {
+    if (view === 'form') {
+      const currentScroll = window.scrollY;
+      console.log(`Leaving form for ${newView}, saving scroll position: ${currentScroll}`);
+      setScrollPosition(currentScroll);
+    }
+    setView(newView);
   };
 
   const validateForm = () => {
@@ -126,8 +159,8 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       border-radius: var(--global-border-radius) 0 0 var(--global-border-radius);
     }
     .input-wrapper .select-icon {
-      width: 120px; /* Matches parent height for perfect square */
-      height: 100%; /* Inherits 120px from input-wrapper */
+      width: 120px;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -141,6 +174,14 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       background-color: var(--elevation-2);
     }
   `;
+
+  // Render different views based on state
+  if (view === 'recipient') {
+    return <SelectRecipient onSelect={handleFieldUpdate} onBack={() => handleViewChange('form')} />;
+  }
+  if (view === 'locker') {
+    return <SelectLocker onSelect={handleFieldUpdate} onBack={() => handleViewChange('form')} />;
+  }
 
   return (
     <>
@@ -178,6 +219,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         <div 
           className="select-icon" 
           title="Select Recipient"
+          onClick={() => handleViewChange('recipient')}
         >
           <SendMailIcon />
         </div>
@@ -205,8 +247,9 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
           className="input-field"
         />
         <div 
-          className="select-icon" 
+          className="select-icon"
           title="Select Locker"
+          onClick={() => handleViewChange('locker')}
         >
           <LockerIcon />
         </div>
