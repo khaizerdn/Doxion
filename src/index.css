@@ -26,6 +26,15 @@
   
   /* Layout */
   --global-border-radius: 30px;
+  --global-button-height: 150px;
+  --global-input-height: 150px;
+
+  --font-size-1: 6rem;
+  --font-size-2: 3rem;
+  --font-size-3: 2.5rem;
+  --font-size-4: 1.8rem;
+  --font-size-5: 1.4rem;
+  --font-size-6: 1rem;
 }
 
 html, body {
@@ -42,31 +51,38 @@ body {
 
 /* Headings */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
-  color: var(--color-primary-dark);
+  line-height: 0.75; /* Unitless value; sets line-height equal to font-size */
 }
 
+/* Optional: Define specific font-sizes for clarity */
 h1 {
-  font-size: 6rem;
-  font-weight: 900;
-  margin-bottom: 10px;
-  text-transform: uppercase;
+  font-size: var(--font-size-1);
 }
 
 h2 {
-  font-size: 2rem;
-  font-weight: 900;
-  margin-bottom: 20px;
+  font-size: var(--font-size-2);
 }
 
-h3 { font-size: 1.75rem; }
-h4 { font-size: 1.5rem; }
-h5 { font-size: 1.25rem; }
-h6 { font-size: 1rem; }
+h3 {
+  font-size: var(--font-size-3);
+}
+
+h4 {
+  font-size: var(--font-size-4);
+}
+
+h5 {
+  font-size: var(--font-size-5);
+}
+
+h6 {
+  font-size: var(--font-size-6);
+}
 
 p {
   line-height: 1.6;
   color: var(--color-muted-dark);
+  font-size: var(--font-size-4);
 }
 
 /* Elevation classes */
@@ -101,24 +117,26 @@ p {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-width: 700px;
+  max-width: 1000px;
   width: 100%;
   min-height: 100%; /* Occupies full height of parent */
   text-align: left;
-  margin: 50px 0;
+  padding: 50px;
+  gap: 20px;
 }
 
 /* Buttons */
 .action-button {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: 20px;
   width: 100%;
+  margin-top: 10px;
 }
 
 /* Error messaging */
 .error-message {
   color: var(--color-error);
-  font-size: 14px;
-  margin: 5px 0 10px;
+  font-size: var(--font-size-4);
+  margin-bottom: 10px;
 }

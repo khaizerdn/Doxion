@@ -1,7 +1,6 @@
-// src/components/Button.jsx (example path)
 import React, { useState } from 'react';
 
-const Button = ({ type, children, onClick, width = '100%', height = '120px', fontSize = '2rem' }) => {
+const Button = ({ type, children, onClick, width = '100%', height = 'var(--global-button-height)', fontSize = 'var(--font-size-2)', className = '', style = {} }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const baseColor = type === 'primary' ? 'var(--color-primary-dark)' : 'var(--elevation-2)';
@@ -11,14 +10,14 @@ const Button = ({ type, children, onClick, width = '100%', height = '120px', fon
     button {
       padding: 0;
       width: ${width};
-      height: ${height};
+      height: ${height}; /* Use the height prop directly */
       font-size: ${fontSize};
       font-weight: 800;
+      font-family: var(--font-family);
       border: none;
       border-radius: var(--global-border-radius);
       cursor: pointer;
       transition: background-color 0.3s;
-      margin: 10px 0;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -34,13 +33,15 @@ const Button = ({ type, children, onClick, width = '100%', height = '120px', fon
     <>
       <style>{buttonStyles}</style>
       <button
-        className={type === 'primary' ? 'primary-button' : 'muted-button'}
+        className={`${type === 'primary' ? 'primary-button' : 'muted-button'} ${className}`}
         onClick={onClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
           backgroundColor: isHovered ? hoverColor : baseColor,
           color: type === 'primary' ? '#ffffff' : 'var(--color-muted-dark)',
+          height, // Ensure height prop is applied inline
+          ...style, // Allow additional styles to be merged
         }}
       >
         {children}

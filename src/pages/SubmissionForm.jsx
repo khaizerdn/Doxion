@@ -8,19 +8,19 @@ import { validateEmail, validateRequired, validateLockerNumber } from '../utils/
 
 // Send Mail SVG Icon (Envelope)
 const SendMailIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path 
-      d="M3 5H21C21.5523 5 22 5.44772 22 6V18C22 18.5523 21.5523 19 21 19H3C2.44772 19 2 18.5523 2 18V6C2 5.44772 2.44772 5 3 5Z" 
-      stroke="var(--color-muted-dark)" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M3 5H21C21.5523 5 22 5.44772 22 6V18C22 18.5523 21.5523 19 21 19H3C2.44772 19 2 18.5523 2 18V6C2 5.44772 2.44772 5 3 5Z"
+      stroke="var(--color-muted-dark)"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <path 
-      d="M2 6L12 13L22 6" 
-      stroke="var(--color-muted-dark)" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
+    <path
+      d="M2 6L12 13L22 6"
+      stroke="var(--color-muted-dark)"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
     />
   </svg>
@@ -28,26 +28,26 @@ const SendMailIcon = () => (
 
 // Locker SVG Icon
 const LockerIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path 
-      d="M7 2H17C18.1046 2 19 2.89543 19 4V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V4C5 2.89543 5.89543 2 7 2Z" 
-      stroke="var(--color-muted-dark)" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M7 2H17C18.1046 2 19 2.89543 19 4V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V4C5 2.89543 5.89543 2 7 2Z"
+      stroke="var(--color-muted-dark)"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <path 
-      d="M12 15C13.1046 15 14 14.1046 14 13C14 11.8954 13.1046 11 12 11C10.8954 11 10 11.8954 10 13C10 14.1046 10.8954 15 12 15Z" 
-      stroke="var(--color-muted-dark)" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
+    <path
+      d="M12 15C13.1046 15 14 14.1046 14 13C14 11.8954 13.1046 11 12 11C10.8954 11 10 11.8954 10 13C10 14.1046 10.8954 15 12 15Z"
+      stroke="var(--color-muted-dark)"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <path 
-      d="M12 15V18" 
-      stroke="var(--color-muted-dark)" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
+    <path
+      d="M12 15V18"
+      stroke="var(--color-muted-dark)"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
     />
   </svg>
@@ -144,7 +144,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     }
     .input-wrapper .input-field {
       flex: 1;
-      height: 100%;
+      height: var(--global-input-height);
       padding: 30px;
       font-size: 2rem;
       color: var(--color-muted-dark);
@@ -154,8 +154,8 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       border-radius: var(--global-border-radius) 0 0 var(--global-border-radius);
     }
     .input-wrapper .select-icon {
-      width: 120px;
-      height: 100%;
+      width: var(--global-input-height);
+      height: var(--global-input-height);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -170,9 +170,9 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     }
     .textarea-note {
       width: 100%;
-      min-height: 120px;
+      min-height: 150px;
       padding: 30px; /* Match Input.jsx */
-      padding-top: 40px; /* Adjusted for vertical centering */
+      padding-top: 53px; /* Adjusted for vertical centering */
       padding-bottom: 0px; /* Adjusted for vertical centering */
       margin: 10px 0;
       font-size: 2rem; /* Match Input.jsx */
@@ -208,8 +208,10 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
   return (
     <>
       <style>{styles}</style>
-      <h2>SUBMISSION FORM</h2>
-      
+      <h2>Submission Form</h2>
+      <p style={{ marginBottom: '10px' }}>
+        Please fill up the form below to proceed.
+      </p>
       <Input
         placeholder="First Name"
         value={formData.firstName}
@@ -238,8 +240,8 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
           emailError={errors.recipientEmail}
           className="input-field"
         />
-        <div 
-          className="select-icon" 
+        <div
+          className="select-icon"
           title="Select Recipient"
           onClick={() => handleViewChange('recipient')}
         >
@@ -270,7 +272,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
           emailError={errors.lockerNumber}
           className="input-field"
         />
-        <div 
+        <div
           className="select-icon"
           title="Select Locker"
           onClick={() => handleViewChange('locker')}

@@ -1,4 +1,3 @@
-// src/pages/Main/Main.jsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom'; // Import Link for navigation
 import Button from './components/Button';
@@ -8,16 +7,8 @@ function Main() {
   const [showSubmissionSteps, setShowSubmissionSteps] = useState(false);
 
   const mainStyles = `
-    .disclaimer {
-      font-size: 1.2rem;
-      color: var(--color-muted-dark);
-      max-width: 600px;
-      margin-top: 20px;
-      line-height: 1.6;
-      width: 100%;
-    }
     .terms-link {
-      color: var(--text-accent); /* Use accent color for link */
+      color: var(--text-accent); /* Use accent color for terms link */
       text-decoration: none; /* Remove default underline */
     }
     .terms-link:hover {
@@ -33,21 +24,23 @@ function Main() {
       ) : (
         <div className="main-container">
           <div className="content-wrapper">
-            <h1>DOXION</h1>
-            <h2>We find ways to submit シ</h2>
+            <h1 style={{ fontWeight: '900' }}>DOXION</h1>
+            <h2 style={{ marginBottom: 10 }}>We find ways to submit シ</h2>
             <Button type="primary" onClick={() => setShowSubmissionSteps(true)}>
               SUBMIT
             </Button>
             <Button type="muted" onClick={() => console.log('Receive clicked')}>
               RECEIVE
             </Button>
-            <div className="disclaimer">
+            <p style={{ marginTop: 10 }}>
               By using the Doxion locker, you acknowledge and accept the{' '}
               <Link to="/termsandconditions" className="terms-link">
                 <strong>terms and conditions</strong>
               </Link>{' '}
               for submitting or receiving documents.
-            </div>
+              <br />
+              <Link to="/adminpanel" className="terms-link" style={{ fontSize: 'var(--font-size-6)'}}> Click here for the admin panel.</Link>
+            </p>
           </div>
         </div>
       )}

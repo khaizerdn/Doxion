@@ -132,7 +132,7 @@ const SelectRecipient = ({ onSelect, onBack }) => {
         gap: '16px'
       }}>
         <BackButton onClick={onBack} />
-        <h2 style={{ margin: 0 }}>SELECT RECIPIENT</h2>
+        <h2 style={{ margin: 0 }}>Select Recipient</h2>
       </div>
       <div style={{
         width: '100%',

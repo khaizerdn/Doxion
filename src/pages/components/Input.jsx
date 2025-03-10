@@ -5,15 +5,15 @@ const Input = ({ placeholder, value, onChange, emailError, className = '' }) => 
   const inputStyles = `
     .input-field {
       width: 100%;
-      height: 120px;
+      height: var(--global-input-height);
       padding: 30px;
+      margin: 10px 0;
       font-size: 2rem;
       color: var(--color-muted-dark);
       background-color: var(--elevation-1);
       border: 1px solid ${emailError ? 'var(--color-error)' : 'var(--elevation-3)'};
       border-radius: var(--global-border-radius);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-      margin: 10px 0;
       transition: border-color 0.3s ease; /* Smooth transition for border color change */
     }
     .input-field::placeholder {

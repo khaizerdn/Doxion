@@ -5,10 +5,10 @@ import { Link } from 'react-router-dom';
 function TermsAndConditions() {
   const termsStyles = `
     .terms-content {
-      max-width: 700px; /* Constrain content width */
+      max-width: 1000px; /* Constrain content width */
       width: 100%;
       text-align: left;
-      margin: 50px 0px;
+      padding: 50px;
     }
     .terms-content h1 {
       font-size: 2.5rem;
@@ -27,9 +27,6 @@ function TermsAndConditions() {
       text-decoration: none;
       margin-top: 20px;
       display: inline-block;
-    }
-    .back-link:hover {
-      text-decoration: underline;
     }
   `;
 
@@ -81,9 +78,11 @@ function TermsAndConditions() {
             These terms shall be governed by and construed in accordance with the laws of [Your Jurisdiction], without regard to its conflict of law provisions.
           </p>
 
-          <Link to="/main" className="back-link">
+          <p>
+          <Link to="/main" style={{ textDecoration: 'none', fontSize: 'var(--font-size-5)', color: 'var(--color-muted-dark)' }}>
             Back to Main Page
           </Link>
+          </p>
         </div>
       </div>
     </>

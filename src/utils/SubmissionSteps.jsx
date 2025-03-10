@@ -21,15 +21,11 @@ const SubmissionSteps = ({ onClose }) => {
     const handleNext = (data) => {
         setFormData((prev) => ({ ...prev, ...data }));
 
-        // Increment step based on current step and data provided
         if (currentStep === 1 && data.email && !data.otp) {
-            // First call from ConfirmEmail (email only)
             setCurrentStep(2);
         } else if (currentStep === 2 && data.otp) {
-            // Call from EnterOTP with matching OTP
             setCurrentStep(3);
         } else if (currentStep === 3) {
-            // Final submission from SubmissionForm
             console.log('Submission complete with:', { ...formData, ...data });
             onClose();
         }
@@ -38,9 +34,9 @@ const SubmissionSteps = ({ onClose }) => {
     return (
         <div className="main-container">
             <div className="content-wrapper">
-                <div className="step-indicator">
+                <p style={{ fontSize: 'var(--font-size-5)' }}>
                     Submit (Step {currentStep} of 3)
-                </div>
+                </p>
                 {currentStep === 1 && (
                     <ConfirmEmail
                         onNext={handleNext}
@@ -52,7 +48,11 @@ const SubmissionSteps = ({ onClose }) => {
                     <EnterOTP
                         onNext={handleNext}
                         onClose={onClose}
-                        initialData={{ otp: formData.otp, expiration_timestamp: formData.expiration_timestamp }}
+                        initialData={{
+                            email: formData.email, // Ensure email is passed
+                            otp: formData.otp,
+                            expiration_timestamp: formData.expiration_timestamp
+                        }}
                     />
                 )}
                 {currentStep === 3 && (

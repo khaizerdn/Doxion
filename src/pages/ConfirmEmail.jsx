@@ -66,8 +66,7 @@ const ConfirmEmail = ({ onNext, initialData, onClose }) => {
             display: flex;
             align-items: center;
             width: 100%;
-            height: 120px; /* Unchanged height */
-            margin: 10px 0;
+            height: var(--global-button-height); /* Unchanged height */
             border: 1px solid ${emailError ? 'var(--color-error)' : 'var(--elevation-3)'};
             border-radius: var(--global-border-radius);
             background-color: var(--elevation-1);
@@ -81,7 +80,7 @@ const ConfirmEmail = ({ onNext, initialData, onClose }) => {
             flex: 1 1 60%; /* Grow and shrink, start at 60% of the container */
             height: 100%;
             padding: 30px;
-            font-size: 2rem; /* Unchanged font size */
+            font-size: var(--font-size-3); /* Unchanged font size */
             color: var(--color-muted-dark);
             background: transparent;
             border: none;
@@ -96,7 +95,7 @@ const ConfirmEmail = ({ onNext, initialData, onClose }) => {
         .email-suffix {
             flex: 1 1 40%; /* Grow and shrink, start at 40% of the container */
             padding: 30px;
-            font-size: 2rem; /* Unchanged font size */
+            font-size: var(--font-size-3); /* Unchanged font size */
             color: var(--color-muted-dark);
             border-left: 1px solid var(--elevation-3);
             border-top-right-radius: var(--global-border-radius);
@@ -111,7 +110,10 @@ const ConfirmEmail = ({ onNext, initialData, onClose }) => {
     return (
         <>
             <style>{inputStyles}</style>
-            <h2>ENTER YOUR EMAIL</h2>
+            <h2>Enter Email</h2>
+            <p style={{ marginBottom: '10px' }}>
+                Please enter your CvSU email address to proceed.
+            </p>
             <div className="input-wrapper" tabIndex={0}>
                 <Input
                     placeholder="Username"

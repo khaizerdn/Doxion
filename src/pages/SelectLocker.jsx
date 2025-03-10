@@ -129,7 +129,7 @@ const SelectLocker = ({ onSelect, onBack }) => {
         gap: '16px'
       }}>
         <BackButton onClick={onBack} />
-        <h2 style={{ margin: 0 }}>SELECT LOCKER</h2>
+        <h2 style={{ margin: 0 }}>Select Locker</h2>
       </div>
       <div style={{
         width: '100%',
