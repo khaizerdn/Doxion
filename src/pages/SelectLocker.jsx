@@ -2,43 +2,70 @@ import React, { useState, useEffect } from 'react';
 import BackButton from '../pages/components/BackButton';
 
 const SelectLocker = ({ onSelect, onBack }) => {
-  // Mock locker list with assigned person data, without location
-  const lockers = [
-    { 
-      id: 'L001', 
-      number: 'L001', 
-      status: 'Available', 
-      assignedTo: { name: 'John Doe', email: 'john.doe@example.com', title: 'Developer' },
-      image: 'https://www.qu.edu/4aabf2/globalassets/global/media/qu/photography/1_today/z-_-archive-photos-pre-2024/mohammad-elahee-headshot-580x417-2023.jpg'
-    },
-    { 
-      id: 'L002', 
-      number: 'L002', 
-      status: 'Available', 
-      assignedTo: { name: 'Jane Smith', email: 'jane.smith@example.com', title: 'Designer' },
-      image: 'https://headshots-inc.com/wp-content/uploads/2023/02/Professional-Headshot-Photography-Example-1.jpg'
-    },
-    { 
-      id: 'L003', 
-      number: 'L003', 
-      status: 'Occupied', 
-      assignedTo: null,
-      image: null
-    }
-  ];
+  const [lockers, setLockers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Reset scroll to top on mount
   useEffect(() => {
     console.log('SelectLocker mounted, resetting scroll to top');
     window.scrollTo({ top: 0, behavior: 'instant' });
+    fetchLockers();
   }, []);
 
+  const fetchLockers = async () => {
+    try {
+      setLoading(true);
+      // Fetch all lockers
+      const lockerResponse = await fetch('http://localhost:5000/api/lockers');
+      if (!lockerResponse.ok) throw new Error('Failed to fetch lockers');
+      const lockerData = await lockerResponse.json();
+
+      // Fetch submissions to determine assigned recipients
+      const submissionResponse = await fetch('http://localhost:5000/api/submissions');
+      if (!submissionResponse.ok) throw new Error('Failed to fetch submissions');
+      const submissionData = await submissionResponse.json();
+
+      // Fetch all recipients for mapping
+      const recipientResponse = await fetch('http://localhost:5000/api/recipients');
+      if (!recipientResponse.ok) throw new Error('Failed to fetch recipients');
+      const recipientData = await recipientResponse.json();
+
+      // Map lockers with assigned recipients from submissions
+      const lockersWithAssignments = lockerData.map((locker) => {
+        const submission = submissionData.find((sub) => sub.lockerNumber === locker.number);
+        if (submission) {
+          const recipient = recipientData.find((rec) => rec.email === submission.recipientEmail);
+          return {
+            ...locker,
+            status: 'Occupied',
+            assignedTo: recipient
+              ? { name: recipient.name, email: recipient.email, title: recipient.title }
+              : null,
+            image: recipient ? recipient.image : null,
+          };
+        }
+        return {
+          ...locker,
+          status: 'Available',
+          assignedTo: null,
+          image: null,
+        };
+      });
+
+      setLockers(lockersWithAssignments);
+    } catch (err) {
+      console.error('Error fetching lockers:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSelect = (locker) => {
-    const updateData = {};
-    updateData.lockerNumber = locker.number; // Always set lockerNumber
+    const updateData = { lockerNumber: locker.number };
     if (locker.assignedTo) {
       updateData.recipientEmail = locker.assignedTo.email;
-    } // Only set recipientEmail if assigned
+    }
     onSelect(updateData);
   };
 
@@ -62,12 +89,12 @@ const SelectLocker = ({ onSelect, onBack }) => {
           display: 'flex',
           alignItems: 'center',
           boxShadow: isHovered ? '0 4px 12px rgba(0, 0, 0, 0.1)' : '0 1px 2px rgba(0, 0, 0, 0.05)',
-          transition: 'background-color 0.3s ease, box-shadow 0.3s ease'
+          transition: 'background-color 0.3s ease, box-shadow 0.3s ease',
         }}
       >
         {locker.image ? (
-          <img 
-            src={locker.image} 
+          <img
+            src={locker.image}
             alt={`Locker ${locker.number}`}
             style={{
               width: 'var(--global-input-height)',
@@ -76,7 +103,7 @@ const SelectLocker = ({ onSelect, onBack }) => {
               padding: '10px',
               objectFit: 'cover',
               transition: 'filter 0.3s ease',
-              filter: isHovered ? 'brightness(1.1)' : 'brightness(1)'
+              filter: isHovered ? 'brightness(1.1)' : 'brightness(1)',
             }}
           />
         ) : (
@@ -102,38 +129,46 @@ const SelectLocker = ({ onSelect, onBack }) => {
             </svg>
           </div>
         )}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          padding: '28px',
-          gap: '12px'
-        }}>
-          <span style={{ 
-            fontWeight: 'bold', 
-            fontSize: '2rem',
-            textAlign: 'left',
-            color: 'var(--color-muted-dark)',
-            lineHeight: '1.2'
-          }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            padding: '28px',
+            gap: '12px',
+          }}
+        >
+          <span
+            style={{
+              fontWeight: 'bold',
+              fontSize: '2rem',
+              textAlign: 'left',
+              color: 'var(--color-muted-dark)',
+              lineHeight: '1.2',
+            }}
+          >
             Locker {locker.number}
           </span>
-          <span style={{ 
-            fontSize: '1.625rem',
-            textAlign: 'left',
-            color: 'var(--color-muted-dark)',
-            lineHeight: '1.2'
-          }}>
+          <span
+            style={{
+              fontSize: '1.625rem',
+              textAlign: 'left',
+              color: 'var(--color-muted-dark)',
+              lineHeight: '1.2',
+            }}
+          >
             {locker.assignedTo ? locker.assignedTo.name : 'Unassigned'}
           </span>
-          <span style={{ 
-            fontSize: '1.375rem',
-            textAlign: 'left',
-            color: 'rgba(var(--color-muted-dark-rgb), 0.8)',
-            lineHeight: '1.2'
-          }}>
+          <span
+            style={{
+              fontSize: '1.375rem',
+              textAlign: 'left',
+              color: 'rgba(var(--color-muted-dark-rgb), 0.8)',
+              lineHeight: '1.2',
+            }}
+          >
             {locker.assignedTo ? locker.assignedTo.title : 'No profession'}
           </span>
         </div>
@@ -141,31 +176,40 @@ const SelectLocker = ({ onSelect, onBack }) => {
     );
   };
 
+  if (loading) {
+    return <div>Loading lockers...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   return (
     <div className="select-locker" style={{ width: '100%' }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'flex-start', 
-        marginBottom: '20px',
-        gap: '16px'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          marginBottom: '20px',
+          gap: '16px',
+        }}
+      >
         <BackButton onClick={onBack} />
         <h2 style={{ margin: 0 }}>Select Locker</h2>
       </div>
-      <div style={{
-        width: '100%',
-        maxWidth: '800px',
-      }}>
-        <ul style={{ 
-          listStyle: 'none', 
-          padding: 0,
-          margin: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          width: '100%'
-        }}>
-          {lockers.map(locker => (
+      <div style={{ width: '100%', maxWidth: '800px' }}>
+        <ul
+          style={{
+            listStyle: 'none',
+            padding: 0,
+            margin: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+          }}
+        >
+          {lockers.map((locker) => (
             <LockerItem key={locker.id} locker={locker} />
           ))}
         </ul>

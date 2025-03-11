@@ -2,54 +2,52 @@ import React, { useState, useEffect } from 'react';
 import BackButton from '../pages/components/BackButton';
 
 const SelectRecipient = ({ onSelect, onBack }) => {
-  // Mock recipient list with assigned locker data, aligned with lockers, without dept
-  const recipients = [
-    { 
-      id: 1, 
-      email: 'john.doe@example.com', 
-      name: 'John Doe', 
-      title: 'OJT Coordinator', 
-      assignedLocker: 'L001',
-      image: 'https://images.pexels.com/photos/3777943/pexels-photo-3777943.jpeg?auto=compress&cs=tinysrgb&h=700'
-    },
-    { 
-      id: 2, 
-      email: 'jane.smith@example.com', 
-      name: 'Jane Smith', 
-      title: 'Chief Executive Officer', 
-      assignedLocker: 'L002',
-      image: 'https://headshots-inc.com/wp-content/uploads/2023/02/Professional-Headshot-Photography-Example-1.jpg'
-    },
-    { 
-      id: 3, 
-      email: 'alice.jones@example.com', 
-      name: 'Alice Jones', 
-      title: 'Researcher', 
-      assignedLocker: null,
-      image: 'https://media.istockphoto.com/id/1151796047/photo/laughing-mature-businesswoman-wearing-glasses-posing-on-grey-studio-background.jpg?s=612x612&w=0&k=20&c=Nkb3aDxmf2g_-zFqq0j97x8J_V9asEq5XUpPJU4wxLc='
-    },
-    { 
-      id: 4, 
-      email: 'alice.senoj@example.com', 
-      name: 'Ecila Senoj', 
-      title: 'Not a Researcher', 
-      assignedLocker: null,
-      image: null
-    }
-  ];
+  const [recipients, setRecipients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Reset scroll to top on mount
   useEffect(() => {
     console.log('SelectRecipient mounted, resetting scroll to top');
     window.scrollTo({ top: 0, behavior: 'instant' });
+    fetchRecipients();
   }, []);
 
+  const fetchRecipients = async () => {
+    try {
+      setLoading(true);
+      // Fetch all recipients
+      const recipientResponse = await fetch('http://localhost:5000/api/recipients');
+      if (!recipientResponse.ok) throw new Error('Failed to fetch recipients');
+      const recipientData = await recipientResponse.json();
+
+      // Fetch submissions to determine assigned lockers
+      const submissionResponse = await fetch('http://localhost:5000/api/submissions');
+      if (!submissionResponse.ok) throw new Error('Failed to fetch submissions');
+      const submissionData = await submissionResponse.json();
+
+      // Map recipients with assigned lockers from submissions
+      const recipientsWithLockers = recipientData.map((recipient) => {
+        const submission = submissionData.find((sub) => sub.recipientEmail === recipient.email);
+        return {
+          ...recipient,
+          assignedLocker: submission ? submission.lockerNumber : null,
+        };
+      });
+
+      setRecipients(recipientsWithLockers);
+    } catch (err) {
+      console.error('Error fetching recipients:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSelect = (recipient) => {
-    const updateData = {};
-    updateData.recipientEmail = recipient.email; // Always set email
+    const updateData = { recipientEmail: recipient.email };
     if (recipient.assignedLocker) {
       updateData.lockerNumber = recipient.assignedLocker;
-    } // Only set lockerNumber if assigned
+    }
     onSelect(updateData);
   };
 
@@ -73,12 +71,12 @@ const SelectRecipient = ({ onSelect, onBack }) => {
           display: 'flex',
           alignItems: 'center',
           boxShadow: isHovered ? '0 4px 12px rgba(0, 0, 0, 0.1)' : '0 1px 2px rgba(0, 0, 0, 0.05)',
-          transition: 'background-color 0.3s ease, box-shadow 0.3s ease'
+          transition: 'background-color 0.3s ease, box-shadow 0.3s ease',
         }}
       >
         {recipient.image ? (
-          <img 
-            src={recipient.image} 
+          <img
+            src={recipient.image}
             alt={`${recipient.name}'s profile`}
             style={{
               width: 'var(--global-input-height)',
@@ -87,7 +85,7 @@ const SelectRecipient = ({ onSelect, onBack }) => {
               objectFit: 'cover',
               borderRadius: 'var(--global-border-radius)',
               transition: 'filter 0.3s ease',
-              filter: isHovered ? 'brightness(1.1)' : 'brightness(1)'
+              filter: isHovered ? 'brightness(1.1)' : 'brightness(1)',
             }}
           />
         ) : (
@@ -113,38 +111,46 @@ const SelectRecipient = ({ onSelect, onBack }) => {
             </svg>
           </div>
         )}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          padding: '20px',
-          gap: '12px'
-        }}>
-          <span style={{ 
-            fontWeight: 'bold', 
-            fontSize: '2rem',
-            textAlign: 'left',
-            color: 'var(--color-muted-dark)',
-            lineHeight: '1.2'
-          }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            padding: '20px',
+            gap: '12px',
+          }}
+        >
+          <span
+            style={{
+              fontWeight: 'bold',
+              fontSize: '2rem',
+              textAlign: 'left',
+              color: 'var(--color-muted-dark)',
+              lineHeight: '1.2',
+            }}
+          >
             {recipient.name}
           </span>
-          <span style={{ 
-            fontSize: '1.625rem',
-            textAlign: 'left',
-            color: 'var(--color-muted-dark)',
-            lineHeight: '1.2'
-          }}>
+          <span
+            style={{
+              fontSize: '1.625rem',
+              textAlign: 'left',
+              color: 'var(--color-muted-dark)',
+              lineHeight: '1.2',
+            }}
+          >
             {recipient.title}
           </span>
-          <span style={{ 
-            fontSize: '1.375rem',
-            textAlign: 'left',
-            color: 'rgba(var(--color-muted-dark-rgb), 0.8)',
-            lineHeight: '1.2'
-          }}>
+          <span
+            style={{
+              fontSize: '1.375rem',
+              textAlign: 'left',
+              color: 'rgba(var(--color-muted-dark-rgb), 0.8)',
+              lineHeight: '1.2',
+            }}
+          >
             Locker: {recipient.assignedLocker || 'None'}
           </span>
         </div>
@@ -152,31 +158,40 @@ const SelectRecipient = ({ onSelect, onBack }) => {
     );
   };
 
+  if (loading) {
+    return <div>Loading recipients...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   return (
     <div className="select-recipient" style={{ width: '100%' }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'flex-start', 
-        marginBottom: '20px',
-        gap: '16px'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          marginBottom: '20px',
+          gap: '16px',
+        }}
+      >
         <BackButton onClick={onBack} />
         <h2 style={{ margin: 0 }}>Select Recipient</h2>
       </div>
-      <div style={{
-        width: '100%',
-        maxWidth: '800px',
-      }}>
-        <ul style={{ 
-          listStyle: 'none', 
-          padding: 0,
-          margin: '0',
-          display: 'flex',
-          flexDirection: 'column',
-          width: '100%'
-        }}>
-          {recipients.map(recipient => (
+      <div style={{ width: '100%', maxWidth: '800px' }}>
+        <ul
+          style={{
+            listStyle: 'none',
+            padding: 0,
+            margin: '0',
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+          }}
+        >
+          {recipients.map((recipient) => (
             <RecipientItem key={recipient.id} recipient={recipient} />
           ))}
         </ul>

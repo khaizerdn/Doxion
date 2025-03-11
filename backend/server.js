@@ -278,6 +278,16 @@ app.post('/api/submissions', async (req, res) => {
     }
 });
 
+// Get All Submissions
+app.get('/api/submissions', async (req, res) => {
+    try {
+      const [rows] = await pool.execute('SELECT id, email, recipientEmail, note, lockerNumber, otp, created_at FROM submissions');
+      res.json(rows);
+    } catch (error) {
+      handleDbError(res, error);
+    }
+  });
+
 // Root endpoint
 app.get('/', (req, res) => {
     res.send('Backend server is running');
