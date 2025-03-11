@@ -3,14 +3,13 @@ import React, { useState, useEffect } from 'react';
 import BackButton from '../pages/components/BackButton';
 
 const SelectRecipient = ({ onSelect, onBack }) => {
-  // Mock recipient list with assigned locker data, aligned with lockers
+  // Mock recipient list with assigned locker data, aligned with lockers, without dept
   const recipients = [
     { 
       id: 1, 
       email: 'john.doe@example.com', 
       name: 'John Doe', 
-      title: 'Developer', 
-      dept: 'Engineering', 
+      title: 'OJT Coordinator', 
       assignedLocker: 'L001',
       image: 'https://images.pexels.com/photos/3777943/pexels-photo-3777943.jpeg?auto=compress&cs=tinysrgb&h=700'
     },
@@ -18,8 +17,7 @@ const SelectRecipient = ({ onSelect, onBack }) => {
       id: 2, 
       email: 'jane.smith@example.com', 
       name: 'Jane Smith', 
-      title: 'Designer', 
-      dept: 'Creative', 
+      title: 'Chief Executive Officer', 
       assignedLocker: 'L002',
       image: 'https://headshots-inc.com/wp-content/uploads/2023/02/Professional-Headshot-Photography-Example-1.jpg'
     },
@@ -28,9 +26,8 @@ const SelectRecipient = ({ onSelect, onBack }) => {
       email: 'alice.jones@example.com', 
       name: 'Alice Jones', 
       title: 'Researcher', 
-      dept: 'Science', 
       assignedLocker: null,
-      image: 'https://via.placeholder.com/150'
+      image: 'https://media.istockphoto.com/id/1151796047/photo/laughing-mature-businesswoman-wearing-glasses-posing-on-grey-studio-background.jpg?s=612x612&w=0&k=20&c=Nkb3aDxmf2g_-zFqq0j97x8J_V9asEq5XUpPJU4wxLc='
     }
   ];
 

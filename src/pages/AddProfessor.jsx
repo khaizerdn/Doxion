@@ -80,9 +80,9 @@ const ProfessorItem = ({ item, onSelect, onDelete }) => {
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               style={{
-                width: '50%', // Matches previous backgroundSize
+                width: '50%',
                 height: '50%',
-                fill: 'var(--color-primary-dark)', // Apply color directly
+                fill: 'var(--color-primary-dark)', // Updated to match previous correction
               }}
             >
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
@@ -121,16 +121,6 @@ const ProfessorItem = ({ item, onSelect, onDelete }) => {
           >
             {item.title}
           </span>
-          <span
-            style={{
-              fontSize: '1.375rem',
-              textAlign: 'left',
-              color: 'rgba(var(--color-muted-dark-rgb), 0.8)',
-              lineHeight: '1.2',
-            }}
-          >
-            Department: {item.dept}
-          </span>
         </div>
       </div>
       <button
@@ -141,19 +131,19 @@ const ProfessorItem = ({ item, onSelect, onDelete }) => {
           position: 'absolute',
           top: '20px',
           right: '20px',
-          width: '40px', // Square dimensions
+          width: '40px',
           height: '40px',
-          backgroundColor: isDeleteHovered ? '#6e6e6e' : 'var(--color-muted-dark)', // Hover effect like Button.jsx
+          backgroundColor: isDeleteHovered ? '#6e6e6e' : 'var(--color-muted-dark)',
           color: 'var(--color-muted-light)',
-          fontSize: '1rem', // Adjusted for square size
+          fontSize: '1rem',
           fontWeight: 'bold',
           border: 'none',
-          borderRadius: '10px', // Match Button.jsx
+          borderRadius: '10px',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'background-color 0.3s', // Match Button.jsx transition
+          transition: 'background-color 0.3s',
           padding: '0',
         }}
         aria-label={`Delete ${item.name}`}
@@ -175,7 +165,6 @@ function AddProfessor() {
       email: 'prof1@example.com',
       name: 'Prof One',
       title: 'Professor',
-      dept: 'Math',
       image: null,
     },
     {
@@ -183,8 +172,7 @@ function AddProfessor() {
       email: 'prof2@example.com',
       name: 'Prof Two',
       title: 'Associate Professor',
-      dept: 'Science',
-      image: null, // No image for testing
+      image: null,
     },
   ]);
 
@@ -227,7 +215,7 @@ function AddProfessor() {
           <ul
             style={{
               listStyle: 'none',
-              padding: 0,
+              padding: '0',
               margin: '0',
               display: 'flex',
               flexDirection: 'column',

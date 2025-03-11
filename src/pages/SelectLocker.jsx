@@ -3,12 +3,11 @@ import React, { useState, useEffect } from 'react';
 import BackButton from '../pages/components/BackButton';
 
 const SelectLocker = ({ onSelect, onBack }) => {
-  // Mock locker list with assigned person data, aligned with recipients
+  // Mock locker list with assigned person data, without location
   const lockers = [
     { 
       id: 'L001', 
       number: 'L001', 
-      location: 'Building A', 
       status: 'Available', 
       assignedTo: { name: 'John Doe', email: 'john.doe@example.com', title: 'Developer' },
       image: 'https://www.qu.edu/4aabf2/globalassets/global/media/qu/photography/1_today/z-_-archive-photos-pre-2024/mohammad-elahee-headshot-580x417-2023.jpg'
@@ -16,7 +15,6 @@ const SelectLocker = ({ onSelect, onBack }) => {
     { 
       id: 'L002', 
       number: 'L002', 
-      location: 'Building B', 
       status: 'Available', 
       assignedTo: { name: 'Jane Smith', email: 'jane.smith@example.com', title: 'Designer' },
       image: 'https://headshots-inc.com/wp-content/uploads/2023/02/Professional-Headshot-Photography-Example-1.jpg'
@@ -24,7 +22,6 @@ const SelectLocker = ({ onSelect, onBack }) => {
     { 
       id: 'L003', 
       number: 'L003', 
-      location: 'Building C', 
       status: 'Occupied', 
       assignedTo: null,
       image: 'https://via.placeholder.com/150'
