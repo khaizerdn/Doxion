@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cors({
     origin: 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Added 'PUT' here
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
 }));
 
@@ -219,6 +219,61 @@ app.delete('/api/recipients/:id', async (req, res) => {
         }
         res.status(204).send();
     } catch (error) {
+        handleDbError(res, error);
+    }
+});
+
+// POST /api/submissions - Save submission data (without firstName and lastName)
+app.post('/api/submissions', async (req, res) => {
+    const { email, recipientEmail, note, lockerNumber, otp } = req.body;
+
+    // Validate required fields with specific error messages
+    if (!email) return res.status(400).json({ error: 'Sender email is required' });
+    if (!recipientEmail) return res.status(400).json({ error: 'Recipient email is required' });
+    if (!note) return res.status(400).json({ error: 'Note is required' });
+    if (!lockerNumber) return res.status(400).json({ error: 'Locker number is required' });
+    if (!otp) return res.status(400).json({ error: 'OTP is required' });
+
+    // Generate unique ID using Snowflake
+    const id = uid.getUniqueID().toString();
+
+    try {
+        // Verify locker exists
+        const [lockerRows] = await pool.execute('SELECT number FROM lockers WHERE number = ?', [lockerNumber]);
+        if (lockerRows.length === 0) {
+            return res.status(404).json({ error: 'Locker number does not exist' });
+        }
+
+        // Verify recipient email exists
+        const [recipientRows] = await pool.execute('SELECT email FROM recipients WHERE email = ?', [recipientEmail]);
+        if (recipientRows.length === 0) {
+            return res.status(404).json({ error: 'Recipient email does not exist' });
+        }
+
+        // Insert submission into database
+        const [result] = await pool.execute(
+            'INSERT INTO submissions (id, email, recipientEmail, note, lockerNumber, otp) VALUES (?, ?, ?, ?, ?, ?)',
+            [id, email, recipientEmail, note, lockerNumber, otp]
+        );
+
+        if (result.affectedRows === 1) {
+            console.log(`Submission ${id} saved successfully for ${email}`);
+            res.status(201).json({
+                id,
+                email,
+                recipientEmail,
+                note,
+                lockerNumber,
+                otp,
+                created_at: new Date().toISOString(),
+            });
+        } else {
+            throw new Error('Failed to insert submission');
+        }
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'Submission ID conflict' });
+        }
         handleDbError(res, error);
     }
 });

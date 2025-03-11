@@ -1,4 +1,3 @@
-// src/pages/SubmissionForm.jsx
 import React, { useState, useEffect } from 'react';
 import Input from '../pages/components/Input';
 import Button from '../pages/components/Button';
@@ -55,21 +54,18 @@ const LockerIcon = () => (
 
 const SubmissionForm = ({ onNext, onClose, initialData }) => {
   const [formData, setFormData] = useState({
-    firstName: initialData.firstName || '',
-    lastName: initialData.lastName || '',
     recipientEmail: initialData.recipientEmail || '',
     note: initialData.note || '',
-    lockerNumber: initialData.lockerNumber || ''
+    lockerNumber: initialData.lockerNumber || '',
   });
   const [errors, setErrors] = useState({
-    firstName: '',
-    lastName: '',
     recipientEmail: '',
     note: '',
-    lockerNumber: ''
+    lockerNumber: '',
   });
   const [view, setView] = useState('form'); // 'form', 'recipient', or 'locker'
   const [scrollPosition, setScrollPosition] = useState(0); // Store scroll position
+  const [loading, setLoading] = useState(false); // Add loading state
 
   // Restore scroll position when returning to form view
   useEffect(() => {
@@ -81,21 +77,21 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
   }, [view]);
 
   const handleChange = (field) => (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: e.target.value
+      [field]: e.target.value,
     }));
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [field]: ''
+      [field]: '',
     }));
   };
 
   const handleFieldUpdate = (newData) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       lockerNumber: newData.lockerNumber || prev.lockerNumber,
-      recipientEmail: newData.recipientEmail || prev.recipientEmail
+      recipientEmail: newData.recipientEmail || prev.recipientEmail,
     }));
     setView('form');
   };
@@ -109,19 +105,46 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
   const validateForm = () => {
     const newErrors = {
-      firstName: validateRequired(formData.firstName, 'First Name').error,
-      lastName: validateRequired(formData.lastName, 'Last Name').error,
       recipientEmail: validateEmail(formData.recipientEmail).error,
       note: validateRequired(formData.note, 'Note').error,
-      lockerNumber: validateLockerNumber(formData.lockerNumber).error
+      lockerNumber: validateLockerNumber(formData.lockerNumber).error,
     };
     setErrors(newErrors);
-    return Object.values(newErrors).every(error => !error);
+    return Object.values(newErrors).every((error) => !error);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
-    onNext(formData);
+
+    setLoading(true);
+    try {
+      const submissionData = {
+        email: initialData.email || '',
+        recipientEmail: formData.recipientEmail,
+        note: formData.note,
+        lockerNumber: formData.lockerNumber,
+        otp: initialData.otp || '',
+      };
+
+      const response = await fetch('http://localhost:5000/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
+      });
+
+      if (response.ok) {
+        const savedData = await response.json();
+        onNext({ ...formData, submission_id: savedData.id });
+      } else {
+        const errorData = await response.json();
+        setErrors((prev) => ({ ...prev, general: errorData.error || 'Failed to submit' }));
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setErrors((prev) => ({ ...prev, general: 'Network error occurred' }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Styles for inputs and textarea
@@ -171,14 +194,14 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     .textarea-note {
       width: 100%;
       min-height: 400px;
-      padding: 30px; /* Match Input.jsx */
-      padding-top: 53px; /* Adjusted for vertical centering */
-      padding-bottom: 0px; /* Adjusted for vertical centering */
+      padding: 30px;
+      padding-top: 53px;
+      padding-bottom: 0px;
       margin: 10px 0;
-      font-size: var(--font-size-2); /* Match Input.jsx */
-      font-family: inherit; /* Match Input.jsx */
-      font-weight: normal; /* Match default */
-      color: var(--color-muted-dark); /* Match Input.jsx */
+      font-size: var(--font-size-2);
+      font-family: inherit;
+      font-weight: normal;
+      color: var(--color-muted-dark);
       background-color: var(--elevation-1);
       border: 1px solid ${errors.note ? 'var(--color-error)' : 'var(--elevation-3)'};
       border-radius: var(--global-border-radius);
@@ -186,15 +209,15 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       resize: vertical;
       outline: none;
       transition: border-color 0.3s ease;
-      text-align: left; /* Explicitly left-aligned */
-      line-height: normal; /* Default line spacing */
-      box-sizing: border-box; /* Ensure padding doesn't increase height */
+      text-align: left;
+      line-height: normal;
+      box-sizing: border-box;
     }
     .textarea-note:focus {
       border-color: ${errors.note ? 'var(--color-error)' : 'var(--color-primary)'};
     }
     .textarea-note::placeholder {
-      color: var(--color-muted-light); /* Match Input.jsx */
+      color: var(--color-muted-light);
     }
   `;
 
@@ -212,26 +235,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       <p style={{ marginBottom: '10px' }}>
         Please fill up the form below to proceed.
       </p>
-      <Input
-        placeholder="First Name"
-        value={formData.firstName}
-        onChange={handleChange('firstName')}
-        emailError={errors.firstName}
-      />
-      {errors.firstName && (
-        <p className="error-message" aria-live="polite">{errors.firstName}</p>
-      )}
-
-      <Input
-        placeholder="Last Name"
-        value={formData.lastName}
-        onChange={handleChange('lastName')}
-        emailError={errors.lastName}
-      />
-      {errors.lastName && (
-        <p className="error-message" aria-live="polite">{errors.lastName}</p>
-      )}
-
       <div className="input-wrapper" tabIndex={0}>
         <Input
           placeholder="Recipient Email Address"
@@ -240,17 +243,11 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
           emailError={errors.recipientEmail}
           className="input-field"
         />
-        <div
-          className="select-icon"
-          title="Select Recipient"
-          onClick={() => handleViewChange('recipient')}
-        >
+        <div className="select-icon" title="Select Recipient" onClick={() => handleViewChange('recipient')}>
           <SendMailIcon />
         </div>
       </div>
-      {errors.recipientEmail && (
-        <p className="error-message" aria-live="polite">{errors.recipientEmail}</p>
-      )}
+      {errors.recipientEmail && <p className="error-message" aria-live="polite">{errors.recipientEmail}</p>}
 
       <textarea
         className="textarea-note"
@@ -260,9 +257,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         aria-invalid={!!errors.note}
         aria-describedby={errors.note ? 'note-error' : undefined}
       />
-      {errors.note && (
-        <p id="note-error" className="error-message" aria-live="polite">{errors.note}</p>
-      )}
+      {errors.note && <p id="note-error" className="error-message" aria-live="polite">{errors.note}</p>}
 
       <div className="input-wrapper" tabIndex={0}>
         <Input
@@ -272,24 +267,20 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
           emailError={errors.lockerNumber}
           className="input-field"
         />
-        <div
-          className="select-icon"
-          title="Select Locker"
-          onClick={() => handleViewChange('locker')}
-        >
+        <div className="select-icon" title="Select Locker" onClick={() => handleViewChange('locker')}>
           <LockerIcon />
         </div>
       </div>
-      {errors.lockerNumber && (
-        <p className="error-message" aria-live="polite">{errors.lockerNumber}</p>
-      )}
+      {errors.lockerNumber && <p className="error-message" aria-live="polite">{errors.lockerNumber}</p>}
+
+      {errors.general && <p className="error-message" aria-live="polite">{errors.general}</p>}
 
       <div className="action-button">
-        <Button type="secondary" onClick={onClose}>
+        <Button type="secondary" onClick={onClose} disabled={loading}>
           CANCEL
         </Button>
-        <Button type="primary" onClick={handleSubmit}>
-          SUBMIT
+        <Button type="primary" onClick={handleSubmit} disabled={loading}>
+          {loading ? 'SUBMITTING...' : 'SUBMIT'}
         </Button>
       </div>
     </>
