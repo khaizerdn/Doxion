@@ -107,8 +107,8 @@ function AdminPanel() {
             </div>
             <div style={{ width: '100%' }}>
               <ul className="admin-list">
-                <AdminItem text="Add Recipient" to="/addrecipient" iconType="recipient" />
-                <AdminItem text="Add Locker" to="/addlocker" iconType="locker" />
+                <AdminItem text="Recipients" to="/recipients" iconType="recipient" />
+                <AdminItem text="Lockers" to="/lockers" iconType="locker" />
                 <AdminItem text="Activity Logs" to="/activitylogs" iconType="logs" />
               </ul>
             </div>
