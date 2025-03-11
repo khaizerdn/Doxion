@@ -56,7 +56,7 @@ const SelectLocker = ({ onSelect, onBack }) => {
         onMouseLeave={() => setIsHovered(false)}
         style={{
           width: '100%',
-          height: '320px',
+          height: 'var(--global-input-height)',
           margin: '10px 0',
           backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.1)' : 'var(--elevation-1)',
           border: '1px solid var(--elevation-3)',
@@ -73,8 +73,8 @@ const SelectLocker = ({ onSelect, onBack }) => {
           src={locker.image} 
           alt={`Locker ${locker.number}`}
           style={{
-            width: '320px',
-            height: '320px',
+            width: 'var(--global-input-height)',
+            height: 'var(--global-input-height)',
             objectFit: 'cover',
             transition: 'filter 0.3s ease',
             filter: isHovered ? 'brightness(1.1)' : 'brightness(1)'

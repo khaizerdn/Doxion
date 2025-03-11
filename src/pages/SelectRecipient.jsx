@@ -59,7 +59,7 @@ const SelectRecipient = ({ onSelect, onBack }) => {
         onMouseLeave={() => setIsHovered(false)}
         style={{
           width: '100%',
-          height: '320px',
+          height: 'var(--global-input-height)',
           margin: '10px 0',
           backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.1)' : 'var(--elevation-1)',
           border: '1px solid var(--elevation-3)',
@@ -76,9 +76,11 @@ const SelectRecipient = ({ onSelect, onBack }) => {
           src={recipient.image} 
           alt={`${recipient.name}'s profile`}
           style={{
-            width: '320px',
-            height: '320px',
+            width: 'var(--global-input-height)',
+            height: 'var(--global-input-height)',
+            padding: '10px',
             objectFit: 'cover',
+            borderRadius: 'var(--global-border-radius)',
             transition: 'filter 0.3s ease',
             filter: isHovered ? 'brightness(1.1)' : 'brightness(1)'
           }}
@@ -89,7 +91,7 @@ const SelectRecipient = ({ onSelect, onBack }) => {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'flex-start',
-          padding: '28px',
+          padding: '20px',
           gap: '12px'
         }}>
           <span style={{ 
