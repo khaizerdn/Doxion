@@ -12,7 +12,7 @@ const Button = ({ type, children, onClick, width = '100%', height = 'var(--globa
       width: ${width};
       height: ${height}; /* Use the height prop directly */
       font-size: ${fontSize};
-      font-weight: 800;
+      font-weight: 700;
       font-family: var(--font-family);
       border: none;
       border-radius: var(--global-border-radius);

@@ -52,8 +52,7 @@ function AdminPanel() {
       fill: var(--text-accent);
     }
     .admin-text {
-      font-size: clamp(1rem, 2vw, 1.625rem);
-      font-weight: bold;
+      font-size: var(--font-size-4);
       color: var(--color-muted-dark);
       line-height: 1.2;
       text-align: center;

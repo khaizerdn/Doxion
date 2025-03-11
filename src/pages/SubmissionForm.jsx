@@ -146,7 +146,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       flex: 1;
       height: var(--global-input-height);
       padding: 30px;
-      font-size: 2rem;
+      font-size: var(--font-size-2);
       color: var(--color-muted-dark);
       background: transparent;
       border: none;
@@ -170,12 +170,12 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     }
     .textarea-note {
       width: 100%;
-      min-height: 150px;
+      min-height: 400px;
       padding: 30px; /* Match Input.jsx */
       padding-top: 53px; /* Adjusted for vertical centering */
       padding-bottom: 0px; /* Adjusted for vertical centering */
       margin: 10px 0;
-      font-size: 2rem; /* Match Input.jsx */
+      font-size: var(--font-size-2); /* Match Input.jsx */
       font-family: inherit; /* Match Input.jsx */
       font-weight: normal; /* Match default */
       color: var(--color-muted-dark); /* Match Input.jsx */

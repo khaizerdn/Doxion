@@ -26,10 +26,10 @@ function Main() {
           <div className="content-wrapper">
             <h1 style={{ fontWeight: '900' }}>DOXION</h1>
             <h2 style={{ marginBottom: 10 }}>We find ways to submit シ</h2>
-            <Button type="primary" onClick={() => setShowSubmissionSteps(true)}>
+            <Button type="primary" onClick={() => setShowSubmissionSteps(true)} style={{ height: 150 }}>
               SUBMIT
             </Button>
-            <Button type="muted" onClick={() => console.log('Receive clicked')}>
+            <Button type="muted" onClick={() => console.log('Receive clicked')} style={{ height: 150 }}> 
               RECEIVE
             </Button>
             <p style={{ marginTop: 10 }}>

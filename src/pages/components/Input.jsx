@@ -8,7 +8,7 @@ const Input = ({ placeholder, value, onChange, emailError, className = '' }) => 
       height: var(--global-input-height);
       padding: 30px;
       margin: 10px 0;
-      font-size: 2rem;
+      font-size: var(--font-size-2);
       color: var(--color-muted-dark);
       background-color: var(--elevation-1);
       border: 1px solid ${emailError ? 'var(--color-error)' : 'var(--elevation-3)'};
