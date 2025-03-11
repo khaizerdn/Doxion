@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import BackButton from './components/BackButton';
 import Button from './components/Button';
 import Input from './components/Input';
-import { validateRequired } from '../utils/validators';
+import { validateEmail, validateRequired } from '../utils/validators';
 
-// LockerItem component to display individual lockers or the "Add New Locker" button
-const LockerItem = ({ item, onSelect, onDelete }) => {
+const RecipientItem = ({ item, onSelect, onDelete }) => {
   const [isDeleteHovered, setIsDeleteHovered] = useState(false);
 
   if (item.isAdd) {
@@ -25,9 +24,11 @@ const LockerItem = ({ item, onSelect, onDelete }) => {
           width="100%"
           height="100px"
           fontSize="2rem"
-          style={{ fontWeight: 'bold' }}
+          style={{
+            fontWeight: 'bold',
+          }}
         >
-          + Add New Locker
+          + Add New Recipient
         </Button>
       </li>
     );
@@ -57,27 +58,39 @@ const LockerItem = ({ item, onSelect, onDelete }) => {
           width: '100%',
         }}
       >
-        <div
-          style={{
-            width: 'var(--global-input-height)',
-            height: 'var(--global-input-height)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={`${item.name}'s profile`}
             style={{
-              width: '50%',
-              height: '50%',
-              fill: 'var(--elevation-2)',
+              width: 'var(--global-input-height)',
+              height: 'var(--global-input-height)',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 'var(--global-input-height)',
+              height: 'var(--global-input-height)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            <path d="M19.683 9.515a.999.999 0 0 0-.709-.633c-.132-.031-3.268-.769-6.974-.769-1.278 0-2.49.088-3.535.205a8.6 8.6 0 0 1-.037-.813C8.428 4.524 9.577 4 11.993 4s3.065.667 3.379 1.821a1.5 1.5 0 0 0 2.895-.785C17.174 1 13.275 1 11.994 1 7.638 1 5.429 3.188 5.429 7.505c0 .453.023.876.068 1.274-.277.057-.442.095-.47.102a1 1 0 0 0-.71.636c-.038.107-.936 2.655-.936 6.039 0 3.413.898 5.937.937 6.042a.999.999 0 0 0 .709.633c.132.032 3.268.769 6.974.769s6.842-.737 6.974-.768a1 1 0 0 0 .71-.637c.038-.106.936-2.655.936-6.039 0-3.413-.898-5.936-.937-6.042ZM13 16.299a1 1 0 1 1-2 0v-1.485a1 1 0 1 1 2 0v1.485Z" />
-          </svg>
-        </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              style={{
+                width: '50%',
+                height: '50%',
+                fill: 'var(--elevation-2)',
+              }}
+            >
+              <path d="M14 23a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1 7 7 0 1 1 14 0ZM7 6a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm17-1v8a5 5 0 0 1-5 5h-4.526a9.064 9.064 0 0 0-3.839-3.227 6 6 0 0 0-6.614-9.982C4.133 2.133 6.315 0 9 0h10a5 5 0 0 1 5 5Zm-4 10a1 1 0 0 0-1-1h-3.5a1 1 0 1 0 0 2H19a1 1 0 0 0 1-1Z" />
+            </svg>
+          </div>
+        )}
         <div
           style={{
             flex: 1,
@@ -98,7 +111,7 @@ const LockerItem = ({ item, onSelect, onDelete }) => {
               lineHeight: '1.2',
             }}
           >
-            Locker {item.number}
+            {item.name}
           </span>
           <span
             style={{
@@ -108,7 +121,7 @@ const LockerItem = ({ item, onSelect, onDelete }) => {
               lineHeight: '1.2',
             }}
           >
-            {item.location}
+            {item.title}
           </span>
         </div>
       </div>
@@ -135,7 +148,7 @@ const LockerItem = ({ item, onSelect, onDelete }) => {
           transition: 'background-color 0.3s',
           padding: '0',
         }}
-        aria-label={`Delete Locker ${item.number}`}
+        aria-label={`Delete ${item.name}`}
       >
         X
       </button>
@@ -143,81 +156,105 @@ const LockerItem = ({ item, onSelect, onDelete }) => {
   );
 };
 
-// Main AddLocker component
-function AddLocker() {
-  // Initial locker data (specific to this component)
-  const [lockers, setLockers] = useState([
-    { id: 1, number: '1', location: 'R101' },
-    { id: 2, number: '2', location: 'R101' },
-    { id: 3, number: '3', location: 'R102' },
-    { id: 4, number: '4', location: 'R102' },
+function AddRecipient() {
+  const [recipients, setRecipients] = useState([
+    {
+      id: 1,
+      email: 'cc.khaizer.noguera@cvsu.edu.ph',
+      name: 'Engr. Khaizer Noguera',
+      title: 'Recipient',
+      image: null,
+    },
+    {
+      id: 2,
+      email: 'cc.marklawrence.lindo@cvsu.edu.ph',
+      name: 'Engr. Mark Lawrence Lindo',
+      title: 'OJT Coordinator',
+      image: null,
+    },
+    {
+      id: 3,
+      email: 'cc.vhane.alcasura@cvsu.edu.ph',
+      name: 'Engr. Vhane Alcasura',
+      title: 'Senior Recipient',
+      image: null,
+    },
   ]);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ number: '', location: '' });
-  const [errors, setErrors] = useState({ number: '', location: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    title: '',
+    image: '',
+  });
+  const [errors, setErrors] = useState({
+    name: '',
+    email: '',
+    title: '',
+    image: '',
+  });
 
-  // Scroll to top on mount
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
-  // Combine "Add New Locker" button with locker list
   const listItems = [
-    { id: 'add', name: 'Add Locker', isAdd: true },
-    ...lockers.map((locker) => ({ ...locker, isAdd: false })),
+    { id: 'add', name: 'Add Recipient', isAdd: true },
+    ...recipients.map((prof) => ({ ...prof, isAdd: false })),
   ];
 
-  // Handle selection (show form for adding new locker)
   const handleSelect = (item) => {
     if (item.isAdd) {
       setShowForm(true);
     } else {
-      console.log(`Selected locker: ${item.number}`);
-      // Future enhancement: Add edit functionality here if needed
+      console.log(`Selected recipient: ${item.name}`);
+      // TODO: Implement edit form or details display
     }
   };
 
-  // Handle deletion of a locker
   const handleDelete = (id) => {
-    setLockers((prevLockers) => prevLockers.filter((locker) => locker.id !== id));
-    console.log(`Deleted locker with id: ${id}`);
+    setRecipients((prevRecipients) => prevRecipients.filter((prof) => prof.id !== id));
+    console.log(`Deleted recipient with id: ${id}`);
   };
 
-  // Handle form input changes
   const handleChange = (field) => (e) => {
-    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-    setErrors((prev) => ({ ...prev, [field]: '' }));
+    setFormData((prev) => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      [field]: '',
+    }));
   };
 
-  // Validate form inputs
   const validateForm = () => {
     const newErrors = {
-      number: validateRequired(formData.number, 'Locker Number').error,
-      location: validateRequired(formData.location, 'Location').error,
+      name: validateRequired(formData.name, 'Name').error,
+      email: validateEmail(formData.email).error,
+      title: validateRequired(formData.title, 'Title').error,
+      image: '', // Image is optional
     };
     setErrors(newErrors);
     return Object.values(newErrors).every((error) => !error);
   };
 
-  // Handle form submission
   const handleSubmit = () => {
     if (!validateForm()) return;
-    const newLocker = {
-      id: lockers.length + 1, // Simple ID generation; adjust as needed
+    const newRecipient = {
+      id: recipients.length + 1,
       ...formData,
     };
-    setLockers((prev) => [...prev, newLocker]);
-    setFormData({ number: '', location: '' });
+    setRecipients((prev) => [...prev, newRecipient]);
+    setFormData({ name: '', email: '', title: '', image: '' });
     setShowForm(false);
   };
 
-  // Handle form cancellation
   const handleCancel = () => {
-    setFormData({ number: '', location: '' });
+    setFormData({ name: '', email: '', title: '', image: '' });
     setShowForm(false);
   };
 
-  // Inline styles for action buttons
   const styles = `
     .action-button {
       display: flex;
@@ -240,31 +277,53 @@ function AddLocker() {
           }}
         >
           <BackButton onClick={showForm ? handleCancel : () => window.history.back()} />
-          <h2 style={{ margin: 0 }}>Add Locker</h2>
+          <h2 style={{ margin: 0 }}>Add Recipient</h2>
         </div>
         {showForm ? (
           <div style={{ width: '100%' }}>
             <p style={{ marginBottom: '10px' }}>
-              Please fill up the form below to add a new locker.
+              Please fill up the form below to add a new recipient.
             </p>
             <Input
-              placeholder="Locker Number"
-              value={formData.number}
-              onChange={handleChange('number')}
-              emailError={errors.number}
+              placeholder="Name"
+              value={formData.name}
+              onChange={handleChange('name')}
+              emailError={errors.name}
             />
-            {errors.number && (
-              <p className="error-message" aria-live="polite">{errors.number}</p>
+            {errors.name && (
+              <p className="error-message" aria-live="polite">{errors.name}</p>
             )}
+
             <Input
-              placeholder="Location"
-              value={formData.location}
-              onChange={handleChange('location')}
-              emailError={errors.location}
+              placeholder="Email Address"
+              value={formData.email}
+              onChange={handleChange('email')}
+              emailError={errors.email}
             />
-            {errors.location && (
-              <p className="error-message" aria-live="polite">{errors.location}</p>
+            {errors.email && (
+              <p className="error-message" aria-live="polite">{errors.email}</p>
             )}
+
+            <Input
+              placeholder="Title"
+              value={formData.title}
+              onChange={handleChange('title')}
+              emailError={errors.title}
+            />
+            {errors.title && (
+              <p className="error-message" aria-live="polite">{errors.title}</p>
+            )}
+
+            <Input
+              placeholder="Image URL (optional)"
+              value={formData.image}
+              onChange={handleChange('image')}
+              emailError={errors.image}
+            />
+            {errors.image && (
+              <p className="error-message" aria-live="polite">{errors.image}</p>
+            )}
+
             <div className="action-button">
               <Button type="secondary" onClick={handleCancel}>
                 CANCEL
@@ -287,7 +346,7 @@ function AddLocker() {
               }}
             >
               {listItems.map((item) => (
-                <LockerItem
+                <RecipientItem
                   key={item.id}
                   item={item}
                   onSelect={handleSelect}
@@ -302,4 +361,4 @@ function AddLocker() {
   );
 }
 
-export default AddLocker;
+export default AddRecipient;

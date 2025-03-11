@@ -10,8 +10,6 @@ function AdminPanel() {
   const adminStyles = `
     .admin-container {
       width: 100%;
-      padding: 20px;
-      max-width: 960px;
     }
     .admin-list {
       list-style: none;
@@ -64,7 +62,7 @@ function AdminPanel() {
     return (
       <Link to={to} style={{ textDecoration: 'none' }}>
         <li className="admin-item">
-          {iconType === 'professor' ? (
+          {iconType === 'recipient' ? (
             <svg className="admin-icon" viewBox="0 0 24 24">
               <path
                 d="M14 23a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1 7 7 0 1 1 14 0ZM7 6a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm17-1v8a5 5 0 0 1-5 5h-4.526a9.064 9.064 0 0 0-3.839-3.227 6 6 0 0 0-6.614-9.982C4.133 2.133 6.315 0 9 0h10a5 5 0 0 1 5 5Zm-4 10a1 1 0 0 0-1-1h-3.5a1 1 0 1 0 0 2H19a1 1 0 0 0 1-1Z"
@@ -100,16 +98,16 @@ function AdminPanel() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-start',
-                marginBottom: '20px',
+                marginBottom: '50px',
                 gap: '16px',
               }}
             >
               <BackButton onClick={() => window.history.back()} />
               <h2 style={{ margin: 0 }}>Admin Panel</h2>
             </div>
-            <div style={{ width: '100%', maxWidth: '960px' }}>
+            <div style={{ width: '100%' }}>
               <ul className="admin-list">
-                <AdminItem text="Add Professor" to="/addprofessor" iconType="professor" />
+                <AdminItem text="Add Recipient" to="/addrecipient" iconType="recipient" />
                 <AdminItem text="Add Locker" to="/addlocker" iconType="locker" />
                 <AdminItem text="Activity Logs" to="/activitylogs" iconType="logs" />
               </ul>

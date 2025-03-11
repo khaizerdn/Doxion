@@ -1,4 +1,3 @@
-// src/pages/SelectRecipient.jsx
 import React, { useState, useEffect } from 'react';
 import BackButton from '../pages/components/BackButton';
 
@@ -28,6 +27,14 @@ const SelectRecipient = ({ onSelect, onBack }) => {
       title: 'Researcher', 
       assignedLocker: null,
       image: 'https://media.istockphoto.com/id/1151796047/photo/laughing-mature-businesswoman-wearing-glasses-posing-on-grey-studio-background.jpg?s=612x612&w=0&k=20&c=Nkb3aDxmf2g_-zFqq0j97x8J_V9asEq5XUpPJU4wxLc='
+    },
+    { 
+      id: 4, 
+      email: 'alice.senoj@example.com', 
+      name: 'Ecila Senoj', 
+      title: 'Not a Researcher', 
+      assignedLocker: null,
+      image: null
     }
   ];
 
@@ -69,19 +76,43 @@ const SelectRecipient = ({ onSelect, onBack }) => {
           transition: 'background-color 0.3s ease, box-shadow 0.3s ease'
         }}
       >
-        <img 
-          src={recipient.image} 
-          alt={`${recipient.name}'s profile`}
-          style={{
-            width: 'var(--global-input-height)',
-            height: 'var(--global-input-height)',
-            padding: '10px',
-            objectFit: 'cover',
-            borderRadius: 'var(--global-border-radius)',
-            transition: 'filter 0.3s ease',
-            filter: isHovered ? 'brightness(1.1)' : 'brightness(1)'
-          }}
-        />
+        {recipient.image ? (
+          <img 
+            src={recipient.image} 
+            alt={`${recipient.name}'s profile`}
+            style={{
+              width: 'var(--global-input-height)',
+              height: 'var(--global-input-height)',
+              padding: '10px',
+              objectFit: 'cover',
+              borderRadius: 'var(--global-border-radius)',
+              transition: 'filter 0.3s ease',
+              filter: isHovered ? 'brightness(1.1)' : 'brightness(1)'
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 'var(--global-input-height)',
+              height: 'var(--global-input-height)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              style={{
+                width: '50%',
+                height: '50%',
+                fill: 'var(--elevation-2)',
+              }}
+            >
+              <path d="M14 23a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1 7 7 0 1 1 14 0ZM7 6a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm17-1v8a5 5 0 0 1-5 5h-4.526a9.064 9.064 0 0 0-3.839-3.227 6 6 0 0 0-6.614-9.982C4.133 2.133 6.315 0 9 0h10a5 5 0 0 1 5 5Zm-4 10a1 1 0 0 0-1-1h-3.5a1 1 0 1 0 0 2H19a1 1 0 0 0 1-1Z" />
+            </svg>
+          </div>
+        )}
         <div style={{
           flex: 1,
           display: 'flex',

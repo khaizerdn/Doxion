@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Button = ({ type, children, onClick, width = '100%', height = 'var(--global-button-height)', fontSize = 'var(--font-size-2)', className = '', style = {} }) => {
+const Button = ({ type, children, onClick, width = '100%', height = 'var(--global-button-height)', fontSize = 'var(--font-size-3)', className = '', style = {} }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const baseColor = type === 'primary' ? 'var(--color-primary-dark)' : 'var(--elevation-2)';

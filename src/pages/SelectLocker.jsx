@@ -1,4 +1,3 @@
-// src/pages/SelectLocker.jsx
 import React, { useState, useEffect } from 'react';
 import BackButton from '../pages/components/BackButton';
 
@@ -24,7 +23,7 @@ const SelectLocker = ({ onSelect, onBack }) => {
       number: 'L003', 
       status: 'Occupied', 
       assignedTo: null,
-      image: 'https://via.placeholder.com/150'
+      image: null
     }
   ];
 
@@ -66,17 +65,43 @@ const SelectLocker = ({ onSelect, onBack }) => {
           transition: 'background-color 0.3s ease, box-shadow 0.3s ease'
         }}
       >
-        <img 
-          src={locker.image} 
-          alt={`Locker ${locker.number}`}
-          style={{
-            width: 'var(--global-input-height)',
-            height: 'var(--global-input-height)',
-            objectFit: 'cover',
-            transition: 'filter 0.3s ease',
-            filter: isHovered ? 'brightness(1.1)' : 'brightness(1)'
-          }}
-        />
+        {locker.image ? (
+          <img 
+            src={locker.image} 
+            alt={`Locker ${locker.number}`}
+            style={{
+              width: 'var(--global-input-height)',
+              height: 'var(--global-input-height)',
+              borderRadius: 'var(--global-border-radius)',
+              padding: '10px',
+              objectFit: 'cover',
+              transition: 'filter 0.3s ease',
+              filter: isHovered ? 'brightness(1.1)' : 'brightness(1)'
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 'var(--global-input-height)',
+              height: 'var(--global-input-height)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              style={{
+                width: '50%',
+                height: '50%',
+                fill: 'var(--elevation-2)',
+              }}
+            >
+              <path d="M19.683 9.515a.999.999 0 0 0-.709-.633c-.132-.031-3.268-.769-6.974-.769-1.278 0-2.49.088-3.535.205a8.6 8.6 0 0 1-.037-.813C8.428 4.524 9.577 4 11.993 4s3.065.667 3.379 1.821a1.5 1.5 0 0 0 2.895-.785C17.174 1 13.275 1 11.994 1 7.638 1 5.429 3.188 5.429 7.505c0 .453.023.876.068 1.274-.277.057-.442.095-.47.102a1 1 0 0 0-.71.636c-.038.107-.936 2.655-.936 6.039 0 3.413.898 5.937.937 6.042a.999.999 0 0 0 .709.633c-.132.032 3.268.769 6.974.769s6.842-.737 6.974-.768a1 1 0 0 0 .71-.637c.038-.106.936-2.655.936-6.039 0-3.413-.898-5.936-.937-6.042ZM13 16.299a1 1 0 1 1-2 0v-1.485a1 1 0 1 1 2 0v1.485Z" />
+            </svg>
+          </div>
+        )}
         <div style={{
           flex: 1,
           display: 'flex',

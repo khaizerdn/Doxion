@@ -13,11 +13,11 @@ const EnterOTP = ({ onNext, onClose, initialData }) => {
     const styles = `
         .otp-container { 
             display: flex; 
-            gap: 10px; 
-            margin: 25px 0; 
+            gap: 10px;
             justify-content: space-between; 
             align-items: center; 
             width: 100%;
+            height: var(--global-input-height);
         }
         .otp-input-group {
             display: flex;
