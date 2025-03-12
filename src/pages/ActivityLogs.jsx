@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import BackButton from './components/BackButton';
 
+// Utility function to format date without seconds
+const formatDateTime = (dateString) => {
+  if (!dateString) return 'Not received';
+  return new Date(dateString).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
 function ActivityLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,15 +24,16 @@ function ActivityLogs() {
     fetchActivityLogs();
   }, []);
 
-  const getActivityDate = (log) => log.date_received ? new Date(log.date_received) : new Date(log.created_at);
-
   const fetchActivityLogs = async () => {
     try {
       setLoading(true);
       const response = await fetch('http://localhost:5000/api/activitylogs');
       if (!response.ok) throw new Error('Failed to fetch activity logs');
       const data = await response.json();
-      const sortedLogs = data.sort((a, b) => getActivityDate(b) - getActivityDate(a));
+      // Sort logs by most recent date (date_received or created_at)
+      const sortedLogs = data.sort((a, b) => 
+        new Date(a.date_received || a.created_at) - new Date(b.date_received || b.created_at)
+      );
       setLogs(sortedLogs);
     } catch (err) {
       console.error('Error fetching activity logs:', err);
@@ -30,33 +43,34 @@ function ActivityLogs() {
     }
   };
 
-  const handleLogClick = (log) => {
-    setSelectedLog(log);
-  };
-
-  const closeOverview = () => {
-    setSelectedLog(null);
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return 'Not received';
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-  };
-
+  const handleLogClick = (log) => setSelectedLog(log);
+  const closeOverview = () => setSelectedLog(null);
   const isReceived = (log) => !!log.date_received;
 
   const styles = `
+    .main-container {
+      display: flex;
+      justify-content: center;
+    }
+    .content-wrapper {
+      width: 100%;
+      max-width: 960px;
+    }
     .logs-container {
       width: 100%;
       padding: 20px;
-      max-width: 960px;
+    }
+    .header-section {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 20px;
+      gap: 16px;
+    }
+    .log-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
     }
     .log-item {
       display: flex;
@@ -64,7 +78,7 @@ function ActivityLogs() {
       height: var(--global-input-height);
       align-items: center;
       padding: 30px;
-      margin-bottom: 10px;
+      margin: 20px 0;
       background-color: var(--elevation-1);
       border: 1px solid var(--elevation-3);
       border-radius: var(--global-border-radius);
@@ -168,7 +182,7 @@ function ActivityLogs() {
   `;
 
   if (loading) return <div>Loading activity logs...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (error) return <div>Error: {error}. Please try refreshing the page.</div>;
 
   return (
     <>
@@ -176,48 +190,38 @@ function ActivityLogs() {
       <div className="main-container">
         <div className="content-wrapper">
           <div className="logs-container">
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                marginBottom: '20px',
-                gap: '16px',
-              }}
-            >
+            <div className="header-section">
               <BackButton onClick={() => window.history.back()} />
               <h2 style={{ margin: 0 }}>Activity Logs</h2>
             </div>
-            <div>
-              {logs.length === 0 ? (
-                <p>No activity logs available.</p>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {logs.map((log) => (
-                    <li
-                      key={log.id}
-                      className="log-item"
-                      onClick={() => handleLogClick(log)}
-                    >
-                      <div className="log-left">
-                        <div className="log-datetime">
-                          <strong>
-                            {formatDateTime(isReceived(log) ? log.date_received : log.created_at)}
-                          </strong>
-                        </div>
-                        <div className="log-details">
-                          <div>From: {log.email}</div>
-                          <div>To: {log.recipientEmail}</div>
-                        </div>
+            {logs.length === 0 ? (
+              <p>No activity logs available.</p>
+            ) : (
+              <ul className="log-list">
+                {logs.map((log) => (
+                  <li
+                    key={log.id}
+                    className="log-item"
+                    onClick={() => handleLogClick(log)}
+                  >
+                    <div className="log-left">
+                      <div className="log-datetime">
+                        <strong>
+                          {formatDateTime(isReceived(log) ? log.date_received : log.created_at)}
+                        </strong>
                       </div>
-                      <div className="log-status">
-                        {isReceived(log) ? 'Received' : 'Sent'}
+                      <div className="log-details">
+                        <div>From: {log.email}</div>
+                        <div>To: {log.recipientEmail}</div>
                       </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+                    </div>
+                    <div className="log-status">
+                      {isReceived(log) ? 'Received' : 'Sent'}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </div>
@@ -231,57 +235,29 @@ function ActivityLogs() {
             {isReceived(selectedLog) ? (
               <>
                 <div className="overview-header">
-                  <div>
-                    <span className="label">To:</span> {selectedLog.recipientEmail}
-                  </div>
-                  <div>
-                    <span className="label">From:</span> {selectedLog.email}
-                  </div>
-                  <div>
-                    <span className="label">Received:</span> {formatDateTime(selectedLog.date_received)}
-                  </div>
+                  <div><span className="label">To:</span> {selectedLog.recipientEmail}</div>
+                  <div><span className="label">From:</span> {selectedLog.email}</div>
+                  <div><span className="label">Received:</span> {formatDateTime(selectedLog.date_received)}</div>
                 </div>
                 <div className="overview-body">
-                  <p>
-                    <span className="label">Locker:</span> {selectedLog.lockerNumber}
-                  </p>
-                  <p>
-                    <span className="label">OTP:</span> {selectedLog.otp}
-                  </p>
-                  <p>
-                    <span className="label">Sent:</span> {formatDateTime(selectedLog.created_at)}
-                  </p>
-                  <p>
-                    <span className="label">Note:</span> {selectedLog.note}
-                  </p>
+                  <p><span className="label">Locker:</span> {selectedLog.lockerNumber}</p>
+                  <p><span className="label">OTP:</span> {selectedLog.otp}</p>
+                  <p><span className="label">Sent:</span> {formatDateTime(selectedLog.created_at)}</p>
+                  <p><span className="label">Note:</span> {selectedLog.note || 'N/A'}</p>
                 </div>
               </>
             ) : (
               <>
                 <div className="overview-header">
-                  <div>
-                    <span className="label">From:</span> {selectedLog.email}
-                  </div>
-                  <div>
-                    <span className="label">To:</span> {selectedLog.recipientEmail}
-                  </div>
-                  <div>
-                    <span className="label">Sent:</span> {formatDateTime(selectedLog.created_at)}
-                  </div>
+                  <div><span className="label">From:</span> {selectedLog.email}</div>
+                  <div><span className="label">To:</span> {selectedLog.recipientEmail}</div>
+                  <div><span className="label">Sent:</span> {formatDateTime(selectedLog.created_at)}</div>
                 </div>
                 <div className="overview-body">
-                  <p>
-                    <span className="label">Locker:</span> {selectedLog.lockerNumber}
-                  </p>
-                  <p>
-                    <span className="label">OTP:</span> {selectedLog.otp}
-                  </p>
-                  <p>
-                    <span className="label">Received:</span> {formatDateTime(selectedLog.date_received)}
-                  </p>
-                  <p>
-                    <span className="label">Note:</span> {selectedLog.note}
-                  </p>
+                  <p><span className="label">Locker:</span> {selectedLog.lockerNumber}</p>
+                  <p><span className="label">OTP:</span> {selectedLog.otp}</p>
+                  <p><span className="label">Received:</span> {formatDateTime(selectedLog.date_received)}</p>
+                  <p><span className="label">Note:</span> {selectedLog.note || 'N/A'}</p>
                 </div>
               </>
             )}

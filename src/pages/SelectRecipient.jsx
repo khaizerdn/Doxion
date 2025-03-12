@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import BackButton from '../pages/components/BackButton';
 
 const SelectRecipient = ({ onSelect, onBack }) => {
-  const [recipients, setRecipients] = useState([]);
+  const [recipientItems, setRecipientItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -23,15 +23,31 @@ const SelectRecipient = ({ onSelect, onBack }) => {
       if (!activityLogResponse.ok) throw new Error('Failed to fetch activity logs');
       const activityLogData = await activityLogResponse.json();
 
-      const recipientsWithLockers = recipientData.map((recipient) => {
-        const activityLog = activityLogData.find((log) => log.recipientEmail === recipient.email);
-        return {
-          ...recipient,
-          assignedLocker: activityLog ? activityLog.lockerNumber : null,
-        };
+      // Create a list of items where each recipient-locker pair is a separate entry
+      const items = [];
+      recipientData.forEach((recipient) => {
+        const recipientLogs = activityLogData.filter(
+          (log) => log.recipientEmail === recipient.email
+        );
+        const assignedLockers = [...new Set(recipientLogs.map((log) => log.lockerNumber))];
+
+        if (assignedLockers.length > 0) {
+          assignedLockers.forEach((locker) => {
+            items.push({
+              ...recipient,
+              assignedLocker: locker, // Single locker per item
+            });
+          });
+        } else {
+          // If no lockers, add the recipient once with no locker
+          items.push({
+            ...recipient,
+            assignedLocker: null,
+          });
+        }
       });
 
-      setRecipients(recipientsWithLockers);
+      setRecipientItems(items);
     } catch (err) {
       console.error('Error fetching recipients:', err);
       setError(err.message);
@@ -40,11 +56,11 @@ const SelectRecipient = ({ onSelect, onBack }) => {
     }
   };
 
-  const handleSelect = (recipient) => {
-    const updateData = { recipientEmail: recipient.email };
-    if (recipient.assignedLocker) {
-      updateData.lockerNumber = recipient.assignedLocker;
-    }
+  const handleSelect = (item) => {
+    const updateData = { 
+      recipientEmail: item.email,
+      lockerNumber: item.assignedLocker || '', // Use the specific locker or empty string if none
+    };
     onSelect(updateData);
   };
 
@@ -183,8 +199,8 @@ const SelectRecipient = ({ onSelect, onBack }) => {
             width: '100%',
           }}
         >
-          {recipients.map((recipient) => (
-            <RecipientItem key={recipient.id} recipient={recipient} />
+          {recipientItems.map((item, index) => (
+            <RecipientItem key={`${item.id}-${item.assignedLocker || 'none'}-${index}`} recipient={item} />
           ))}
         </ul>
       </div>

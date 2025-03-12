@@ -117,12 +117,12 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
     setLoading(true);
     try {
+      // Exclude OTP from the data sent to the database
       const submissionData = {
         email: initialData.email || '',
         recipientEmail: formData.recipientEmail,
         note: formData.note,
         lockerNumber: formData.lockerNumber,
-        otp: initialData.otp || '',
         date_received: null, // Set to null or a specific date if provided by user
       };
 
@@ -248,16 +248,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       </div>
       {errors.recipientEmail && <p className="error-message" aria-live="polite">{errors.recipientEmail}</p>}
 
-      <textarea
-        className="textarea-note"
-        placeholder="Note"
-        value={formData.note}
-        onChange={handleChange('note')}
-        aria-invalid={!!errors.note}
-        aria-describedby={errors.note ? 'note-error' : undefined}
-      />
-      {errors.note && <p id="note-error" className="error-message" aria-live="polite">{errors.note}</p>}
-
       <div className="input-wrapper" tabIndex={0}>
         <Input
           placeholder="Locker Number"
@@ -271,6 +261,18 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         </div>
       </div>
       {errors.lockerNumber && <p className="error-message" aria-live="polite">{errors.lockerNumber}</p>}
+
+      <textarea
+        className="textarea-note"
+        placeholder="Note"
+        value={formData.note}
+        onChange={handleChange('note')}
+        aria-invalid={!!errors.note}
+        aria-describedby={errors.note ? 'note-error' : undefined}
+      />
+      {errors.note && <p id="note-error" className="error-message" aria-live="polite">{errors.note}</p>}
+
+      
 
       {errors.general && <p className="error-message" aria-live="polite">{errors.general}</p>}
 

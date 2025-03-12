@@ -225,13 +225,12 @@ app.delete('/api/recipients/:id', async (req, res) => {
 
 // POST /api/activitylogs - Save activity log data
 app.post('/api/activitylogs', async (req, res) => {
-    const { email, recipientEmail, note, lockerNumber, otp, date_received } = req.body;
+    const { email, recipientEmail, note, lockerNumber, date_received } = req.body;
 
     if (!email) return res.status(400).json({ error: 'Sender email is required' });
     if (!recipientEmail) return res.status(400).json({ error: 'Recipient email is required' });
     if (!note) return res.status(400).json({ error: 'Note is required' });
     if (!lockerNumber) return res.status(400).json({ error: 'Locker number is required' });
-    if (!otp) return res.status(400).json({ error: 'OTP is required' });
 
     const id = uid.getUniqueID().toString();
 
@@ -247,8 +246,8 @@ app.post('/api/activitylogs', async (req, res) => {
         }
 
         const [result] = await pool.execute(
-            'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, otp, date_received) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [id, email, recipientEmail, note, lockerNumber, otp, date_received || null]
+            'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, date_received) VALUES (?, ?, ?, ?, ?, ?)',
+            [id, email, recipientEmail, note, lockerNumber, date_received || null]
         );
 
         if (result.affectedRows === 1) {
@@ -259,7 +258,6 @@ app.post('/api/activitylogs', async (req, res) => {
                 recipientEmail,
                 note,
                 lockerNumber,
-                otp,
                 date_received: date_received || null,
                 created_at: new Date().toISOString(),
             });
@@ -278,7 +276,7 @@ app.post('/api/activitylogs', async (req, res) => {
 app.get('/api/activitylogs', async (req, res) => {
     try {
         const [rows] = await pool.execute(
-            'SELECT id, email, recipientEmail, note, lockerNumber, otp, created_at, date_received FROM activitylogs'
+            'SELECT id, email, recipientEmail, note, lockerNumber, created_at, date_received FROM activitylogs'
         );
         res.json(rows);
     } catch (error) {
@@ -286,7 +284,7 @@ app.get('/api/activitylogs', async (req, res) => {
     }
 });
 
-// In server.js, add after other endpoints
+// PUT /api/activitylogs/:id/receive - Update receive status
 app.put('/api/activitylogs/:id/receive', async (req, res) => {
     const { id } = req.params;
     try {
@@ -298,14 +296,14 @@ app.put('/api/activitylogs/:id/receive', async (req, res) => {
         return res.status(404).json({ error: 'Activity log not found or already received' });
       }
       const [updatedRows] = await pool.execute(
-        'SELECT * FROM activitylogs WHERE id = ?',
+        'SELECT id, email, recipientEmail, note, lockerNumber, created_at, date_received FROM activitylogs WHERE id = ?',
         [id]
       );
       res.json(updatedRows[0]);
     } catch (error) {
       handleDbError(res, error);
     }
-  });
+});
 
 // Root endpoint
 app.get('/', (req, res) => {

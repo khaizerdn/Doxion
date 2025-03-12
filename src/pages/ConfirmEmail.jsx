@@ -116,7 +116,7 @@ const ConfirmEmail = ({ onNext, initialData, onClose }) => {
             </p>
             <div className="input-wrapper" tabIndex={0}>
                 <Input
-                    placeholder="Username"
+                    placeholder="Email"
                     value={emailLocalPart}
                     onChange={(e) => {
                         setEmailLocalPart(e.target.value);
