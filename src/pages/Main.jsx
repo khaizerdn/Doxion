@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
+import { Link } from 'react-router-dom';
 import Button from './components/Button';
 import SubmissionSteps from '../utils/SubmissionSteps';
+import ReceiveForm from '../pages/ReceiveForm'; // Add this import
 
 function Main() {
   const [showSubmissionSteps, setShowSubmissionSteps] = useState(false);
+  const [showReceiveForm, setShowReceiveForm] = useState(false); // Add this state
 
   const mainStyles = `
     .terms-link {
-      color: var(--text-accent); /* Use accent color for terms link */
-      text-decoration: none; /* Remove default underline */
+      color: var(--text-accent);
+      text-decoration: none;
     }
     .terms-link:hover {
-      text-decoration: underline; /* Add underline on hover for better UX */
+      text-decoration: underline;
     }
   `;
 
@@ -21,15 +23,25 @@ function Main() {
       <style>{mainStyles}</style>
       {showSubmissionSteps ? (
         <SubmissionSteps onClose={() => setShowSubmissionSteps(false)} />
+      ) : showReceiveForm ? (
+        <ReceiveForm onClose={() => setShowReceiveForm(false)} />
       ) : (
         <div className="main-container">
           <div className="content-wrapper">
             <h1 style={{ fontWeight: '900' }}>DOXION</h1>
             <h2 style={{ marginBottom: 10 }}>We find ways to submit シ</h2>
-            <Button type="primary" onClick={() => setShowSubmissionSteps(true)} style={{ height: 150 }}>
+            <Button
+              type="primary"
+              onClick={() => setShowSubmissionSteps(true)}
+              style={{ height: 150 }}
+            >
               SUBMIT
             </Button>
-            <Button type="muted" onClick={() => console.log('Receive clicked')} style={{ height: 150 }}> 
+            <Button
+              type="muted"
+              onClick={() => setShowReceiveForm(true)} // Update this handler
+              style={{ height: 150 }}
+            >
               RECEIVE
             </Button>
             <p style={{ marginTop: 10 }}>
@@ -39,7 +51,13 @@ function Main() {
               </Link>{' '}
               for submitting or receiving documents.
               <br />
-              <Link to="/adminpanel" className="terms-link" style={{ fontSize: 'var(--font-size-6)'}}> Click here for the admin panel.</Link>
+              <Link
+                to="/adminpanel"
+                className="terms-link"
+                style={{ fontSize: 'var(--font-size-6)' }}
+              >
+                Click here for the admin panel.
+              </Link>
             </p>
           </div>
         </div>
