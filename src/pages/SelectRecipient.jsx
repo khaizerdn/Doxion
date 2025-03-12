@@ -15,22 +15,19 @@ const SelectRecipient = ({ onSelect, onBack }) => {
   const fetchRecipients = async () => {
     try {
       setLoading(true);
-      // Fetch all recipients
       const recipientResponse = await fetch('http://localhost:5000/api/recipients');
       if (!recipientResponse.ok) throw new Error('Failed to fetch recipients');
       const recipientData = await recipientResponse.json();
 
-      // Fetch submissions to determine assigned lockers
-      const submissionResponse = await fetch('http://localhost:5000/api/submissions');
-      if (!submissionResponse.ok) throw new Error('Failed to fetch submissions');
-      const submissionData = await submissionResponse.json();
+      const activityLogResponse = await fetch('http://localhost:5000/api/activitylogs');
+      if (!activityLogResponse.ok) throw new Error('Failed to fetch activity logs');
+      const activityLogData = await activityLogResponse.json();
 
-      // Map recipients with assigned lockers from submissions
       const recipientsWithLockers = recipientData.map((recipient) => {
-        const submission = submissionData.find((sub) => sub.recipientEmail === recipient.email);
+        const activityLog = activityLogData.find((log) => log.recipientEmail === recipient.email);
         return {
           ...recipient,
-          assignedLocker: submission ? submission.lockerNumber : null,
+          assignedLocker: activityLog ? activityLog.lockerNumber : null,
         };
       });
 
@@ -158,13 +155,8 @@ const SelectRecipient = ({ onSelect, onBack }) => {
     );
   };
 
-  if (loading) {
-    return <div>Loading recipients...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  if (loading) return <div>Loading recipients...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="select-recipient" style={{ width: '100%' }}>

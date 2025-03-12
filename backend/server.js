@@ -54,8 +54,8 @@ const handleDbError = (res, error) => {
 
 // Generate flake IDs
 app.post('/api/generate-flake-ids', (req, res) => {
-    const submissionId = uid.getUniqueID().toString();
-    res.json({ submission_id: submissionId });
+    const activityLogId = uid.getUniqueID().toString();
+    res.json({ activity_log_id: activityLogId });
 });
 
 // Send OTP
@@ -223,41 +223,36 @@ app.delete('/api/recipients/:id', async (req, res) => {
     }
 });
 
-// POST /api/submissions - Save submission data (without firstName and lastName)
-app.post('/api/submissions', async (req, res) => {
-    const { email, recipientEmail, note, lockerNumber, otp } = req.body;
+// POST /api/activitylogs - Save activity log data
+app.post('/api/activitylogs', async (req, res) => {
+    const { email, recipientEmail, note, lockerNumber, otp, date_received } = req.body;
 
-    // Validate required fields with specific error messages
     if (!email) return res.status(400).json({ error: 'Sender email is required' });
     if (!recipientEmail) return res.status(400).json({ error: 'Recipient email is required' });
     if (!note) return res.status(400).json({ error: 'Note is required' });
     if (!lockerNumber) return res.status(400).json({ error: 'Locker number is required' });
     if (!otp) return res.status(400).json({ error: 'OTP is required' });
 
-    // Generate unique ID using Snowflake
     const id = uid.getUniqueID().toString();
 
     try {
-        // Verify locker exists
         const [lockerRows] = await pool.execute('SELECT number FROM lockers WHERE number = ?', [lockerNumber]);
         if (lockerRows.length === 0) {
             return res.status(404).json({ error: 'Locker number does not exist' });
         }
 
-        // Verify recipient email exists
         const [recipientRows] = await pool.execute('SELECT email FROM recipients WHERE email = ?', [recipientEmail]);
         if (recipientRows.length === 0) {
             return res.status(404).json({ error: 'Recipient email does not exist' });
         }
 
-        // Insert submission into database
         const [result] = await pool.execute(
-            'INSERT INTO submissions (id, email, recipientEmail, note, lockerNumber, otp) VALUES (?, ?, ?, ?, ?, ?)',
-            [id, email, recipientEmail, note, lockerNumber, otp]
+            'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, otp, date_received) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [id, email, recipientEmail, note, lockerNumber, otp, date_received || null]
         );
 
         if (result.affectedRows === 1) {
-            console.log(`Submission ${id} saved successfully for ${email}`);
+            console.log(`Activity log ${id} saved successfully for ${email}`);
             res.status(201).json({
                 id,
                 email,
@@ -265,24 +260,48 @@ app.post('/api/submissions', async (req, res) => {
                 note,
                 lockerNumber,
                 otp,
+                date_received: date_received || null,
                 created_at: new Date().toISOString(),
             });
         } else {
-            throw new Error('Failed to insert submission');
+            throw new Error('Failed to insert activity log');
         }
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ error: 'Submission ID conflict' });
+            return res.status(409).json({ error: 'Activity log ID conflict' });
         }
         handleDbError(res, error);
     }
 });
 
-// Get All Submissions
-app.get('/api/submissions', async (req, res) => {
+// GET /api/activitylogs - Fetch all activity logs
+app.get('/api/activitylogs', async (req, res) => {
     try {
-      const [rows] = await pool.execute('SELECT id, email, recipientEmail, note, lockerNumber, otp, created_at FROM submissions');
-      res.json(rows);
+        const [rows] = await pool.execute(
+            'SELECT id, email, recipientEmail, note, lockerNumber, otp, created_at, date_received FROM activitylogs'
+        );
+        res.json(rows);
+    } catch (error) {
+        handleDbError(res, error);
+    }
+});
+
+// In server.js, add after other endpoints
+app.put('/api/activitylogs/:id/receive', async (req, res) => {
+    const { id } = req.params;
+    try {
+      const [result] = await pool.execute(
+        'UPDATE activitylogs SET date_received = NOW() WHERE id = ? AND date_received IS NULL',
+        [id]
+      );
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Activity log not found or already received' });
+      }
+      const [updatedRows] = await pool.execute(
+        'SELECT * FROM activitylogs WHERE id = ?',
+        [id]
+      );
+      res.json(updatedRows[0]);
     } catch (error) {
       handleDbError(res, error);
     }

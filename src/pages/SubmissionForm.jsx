@@ -63,11 +63,10 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     note: '',
     lockerNumber: '',
   });
-  const [view, setView] = useState('form'); // 'form', 'recipient', or 'locker'
-  const [scrollPosition, setScrollPosition] = useState(0); // Store scroll position
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [view, setView] = useState('form');
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  // Restore scroll position when returning to form view
   useEffect(() => {
     if (view === 'form') {
       setTimeout(() => {
@@ -124,9 +123,10 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         note: formData.note,
         lockerNumber: formData.lockerNumber,
         otp: initialData.otp || '',
+        date_received: null, // Set to null or a specific date if provided by user
       };
 
-      const response = await fetch('http://localhost:5000/api/submissions', {
+      const response = await fetch('http://localhost:5000/api/activitylogs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData),
@@ -134,7 +134,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
       if (response.ok) {
         const savedData = await response.json();
-        onNext({ ...formData, submission_id: savedData.id });
+        onNext({ ...formData, activity_log_id: savedData.id });
       } else {
         const errorData = await response.json();
         setErrors((prev) => ({ ...prev, general: errorData.error || 'Failed to submit' }));
@@ -147,7 +147,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     }
   };
 
-  // Styles for inputs and textarea
   const styles = `
     .input-wrapper {
       display: flex;

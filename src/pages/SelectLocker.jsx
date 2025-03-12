@@ -15,26 +15,22 @@ const SelectLocker = ({ onSelect, onBack }) => {
   const fetchLockers = async () => {
     try {
       setLoading(true);
-      // Fetch all lockers
       const lockerResponse = await fetch('http://localhost:5000/api/lockers');
       if (!lockerResponse.ok) throw new Error('Failed to fetch lockers');
       const lockerData = await lockerResponse.json();
 
-      // Fetch submissions to determine assigned recipients
-      const submissionResponse = await fetch('http://localhost:5000/api/submissions');
-      if (!submissionResponse.ok) throw new Error('Failed to fetch submissions');
-      const submissionData = await submissionResponse.json();
+      const activityLogResponse = await fetch('http://localhost:5000/api/activitylogs');
+      if (!activityLogResponse.ok) throw new Error('Failed to fetch activity logs');
+      const activityLogData = await activityLogResponse.json();
 
-      // Fetch all recipients for mapping
       const recipientResponse = await fetch('http://localhost:5000/api/recipients');
       if (!recipientResponse.ok) throw new Error('Failed to fetch recipients');
       const recipientData = await recipientResponse.json();
 
-      // Map lockers with assigned recipients from submissions
       const lockersWithAssignments = lockerData.map((locker) => {
-        const submission = submissionData.find((sub) => sub.lockerNumber === locker.number);
-        if (submission) {
-          const recipient = recipientData.find((rec) => rec.email === submission.recipientEmail);
+        const activityLog = activityLogData.find((log) => log.lockerNumber === locker.number);
+        if (activityLog) {
+          const recipient = recipientData.find((rec) => rec.email === activityLog.recipientEmail);
           return {
             ...locker,
             status: 'Occupied',
@@ -176,13 +172,8 @@ const SelectLocker = ({ onSelect, onBack }) => {
     );
   };
 
-  if (loading) {
-    return <div>Loading lockers...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  if (loading) return <div>Loading lockers...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="select-locker" style={{ width: '100%' }}>

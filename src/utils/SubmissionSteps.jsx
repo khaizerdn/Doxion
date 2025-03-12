@@ -7,7 +7,7 @@ const SubmissionSteps = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     email: '',
-    submission_id: '',
+    activity_log_id: '',
     expires_at: '',
     expiration_timestamp: 0,
     otp: '',
@@ -24,7 +24,7 @@ const SubmissionSteps = ({ onClose }) => {
     } else if (currentStep === 2 && data.otp) {
       setCurrentStep(3);
     } else if (currentStep === 3) {
-      console.log('Submission complete with:', { ...formData, ...data });
+      console.log('Activity log complete with:', { ...formData, ...data });
       onClose();
     }
   };
