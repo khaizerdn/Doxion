@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 const Button = ({ type, children, onClick, width = '100%', height = 'var(--global-button-height)', fontSize = 'var(--font-size-3)', className = '', style = {} }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  const baseColor = type === 'primary' ? 'var(--color-primary-dark)' : 'var(--elevation-2)';
-  const hoverColor = type === 'primary' ? '#6e6e6e' : 'var(--elevation-1)';
+  const baseColor = type === 'primary' ? 'var(--color-accent)' : 'var(--elevation-2)';
+  const hoverColor = type === 'primary' ? 'var(--color-accent-hover)' : 'var(--elevation-1)';
 
   // Use a unique class name to scope styles
   const buttonClass = `custom-button-${type || 'default'}`;

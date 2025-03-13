@@ -110,7 +110,7 @@ const ConfirmEmail = ({ onNext, initialData, onClose }) => {
     return (
         <>
             <style>{inputStyles}</style>
-            <h2>Enter Email</h2>
+            <h2>Enter Your Email</h2>
             <p style={{ marginBottom: '10px' }}>
                 Please enter your CvSU email address to proceed.
             </p>

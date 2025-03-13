@@ -43,19 +43,27 @@ const EnterOTP = ({ onNext, onClose, initialData }) => {
         .otp-input-error { 
             border-color: var(--color-error); 
         }
-        .resend-text {
-            color: var(--color-muted-dark);
-            cursor: pointer;
+        .resend-button {
+            height: 50px;
+            min-width: 200px;
+            font-size: var(--font-size-5);
+            padding: 8px 16px;
+            color: var(--color-primary-light);
+            background-color: var(--color-accent);
+            border: none;
+            border-radius: 15px;
             font-weight: bold;
-            transition: opacity 0.3s ease;
+            cursor: pointer;
+            transition: opacity 0.3s ease, background-color 0.3s ease;
         }
-        .resend-text.disabled {
+        .resend-button.disabled {
             opacity: 0.6;
             cursor: not-allowed;
             font-weight: normal;
         }
-        .resend-text:not(.disabled):hover {
+        .resend-button:not(.disabled):hover {
             opacity: 0.8;
+            background-color: var(--color-accent-hover);
         }
     `;
 
@@ -169,16 +177,17 @@ const EnterOTP = ({ onNext, onClose, initialData }) => {
                 isVisible={config.showTimers}
                 timerType="otp"
             />
-            <h2>Enter OTP</h2>
+            <h2>Verification</h2>
             <p style={{ marginBottom: '10px' }}>
-                Please enter the OTP sent to your email.{' '}
-                <span
-                    className={`resend-text ${resendCooldown > 0 ? 'disabled' : ''}`}
+                Please enter the OTP sent to: <br /> {initialData.email || 'email'}.{' '}
+                <button
+                    className={`resend-button ${resendCooldown > 0 ? 'disabled' : ''}`}
                     onClick={handleResend}
+                    disabled={resendCooldown > 0}
                     aria-disabled={resendCooldown > 0}
                 >
                     {resendCooldown > 0 ? `Resend OTP? (${resendCooldown}s)` : 'Resend OTP?'}
-                </span>
+                </button>
             </p>
             <div className="otp-container">
                 <div className="otp-input-group">

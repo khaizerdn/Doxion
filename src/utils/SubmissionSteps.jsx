@@ -1,3 +1,4 @@
+// SubmissionSteps.jsx
 import React, { useState } from 'react';
 import ConfirmEmail from '../pages/ConfirmEmail';
 import EnterOTP from '../pages/EnterOTP';
@@ -32,9 +33,11 @@ const SubmissionSteps = ({ onClose }) => {
   return (
     <div className="main-container">
       <div className="content-wrapper">
-        <p style={{ fontSize: 'var(--font-size-5)' }}>
-          Submit (Step {currentStep} of 3)
-        </p>
+        {currentStep !== 3 && (
+          <p style={{ fontSize: 'var(--font-size-5)' }}>
+            Submit (Step {currentStep} of 3)
+          </p>
+        )}
         {currentStep === 1 && (
           <ConfirmEmail
             onNext={handleNext}
@@ -64,6 +67,7 @@ const SubmissionSteps = ({ onClose }) => {
               note: formData.note,
               lockerNumber: formData.lockerNumber,
             }}
+            currentStep={currentStep}
           />
         )}
       </div>

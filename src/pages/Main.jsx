@@ -29,11 +29,11 @@ function Main() {
         <div className="main-container">
           <div className="content-wrapper">
             <h1 style={{ fontWeight: '900' }}>DOXION</h1>
-            <h2 style={{ marginBottom: 10 }}>We find ways to submit シ</h2>
+            <h2 style={{ marginBottom: 10 }}>We find ways to pass documents シ</h2>
             <Button
               type="primary"
               onClick={() => setShowSubmissionSteps(true)}
-              style={{ height: 150 }}
+              style={{ height: 150, fontSize: 'var(--font-size-2)' }}
             >
               SUBMIT
             </Button>

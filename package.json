@@ -13,6 +13,7 @@
     "nodejs-snowflake": "^2.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-lottie": "^1.2.10",
     "react-router-dom": "^7.3.0"
   },
   "devDependencies": {

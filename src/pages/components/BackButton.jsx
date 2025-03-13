@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 const BackButton = ({ onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const baseColor = 'var(--elevation-2)'; // Matches secondary button in Button.jsx
-  const hoverColor = 'var(--elevation-1)'; // Matches secondary button hover in Button.jsx
+  const baseColor = 'var(--color-accent)'; // Matches secondary button in Button.jsx
+  const hoverColor = 'var(--color-accent-hover)'; // Matches secondary button hover in Button.jsx
 
   // Define a unique class name for scoped styles
   const buttonClass = 'custom-back-button';
@@ -50,7 +50,7 @@ const BackButton = ({ onClick }) => {
         >
           <path
             d="M19 12H5M5 12L12 19M5 12L12 5" // Adjusted path to center the arrow
-            stroke="var(--color-muted-dark)"
+            stroke="var(--color-primary-light)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"

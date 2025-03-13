@@ -10,6 +10,9 @@
   --color-muted-dark: rgb(91, 91, 91);
   --color-primary-light: rgb(233, 232, 233);
   --color-muted-light: rgb(218, 219, 218);
+
+  --color-accent: rgb(38, 53, 115);
+  --color-accent-hover: rgb(48, 70, 140);
   
   /* Elevation shades */
   --elevation-0: rgb(255, 255, 255);

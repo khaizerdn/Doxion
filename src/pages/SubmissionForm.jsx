@@ -1,4 +1,7 @@
+// SubmissionForm.jsx
 import React, { useState, useEffect } from 'react';
+import Lottie from 'react-lottie';
+import loadingAnimationData from '../assets/LoadingAnimation.json'; // Adjust path as needed
 import Input from '../pages/components/Input';
 import Button from '../pages/components/Button';
 import SelectRecipient from './SelectRecipient';
@@ -10,14 +13,14 @@ const SendMailIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M3 5H21C21.5523 5 22 5.44772 22 6V18C22 18.5523 21.5523 19 21 19H3C2.44772 19 2 18.5523 2 18V6C2 5.44772 2.44772 5 3 5Z"
-      stroke="var(--color-muted-dark)"
+      stroke="var(--color-accent)"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
     <path
       d="M2 6L12 13L22 6"
-      stroke="var(--color-muted-dark)"
+      stroke="var(--color-accent)"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -30,25 +33,54 @@ const LockerIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M7 2H17C18.1046 2 19 2.89543 19 4V20C19 21.1046 18.1046 22 17 22H7C5.89543 22 5 21.1046 5 20V4C5 2.89543 5.89543 2 7 2Z"
-      stroke="var(--color-muted-dark)"
+      stroke="var(--color-accent)"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
     <path
       d="M12 15C13.1046 15 14 14.1046 14 13C14 11.8954 13.1046 11 12 11C10.8954 11 10 11.8954 10 13C10 14.1046 10.8954 15 12 15Z"
-      stroke="var(--color-muted-dark)"
+      stroke="var(--color-accent)"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
     <path
       d="M12 15V18"
-      stroke="var(--color-muted-dark)"
+      stroke="var(--color-accent)"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
+  </svg>
+);
+
+// Loading Animation Component using Lottie with imported JSON
+const LoadingIcon = () => {
+  const defaultOptions = {
+    loop: true,
+    autoplay: true,
+    animationData: loadingAnimationData,
+    rendererSettings: {
+      preserveAspectRatio: 'xMidYMid slice'
+    }
+  };
+
+  return <Lottie options={defaultOptions} height={250} width={250} />;
+};
+
+// Success SVG Icon (Green Checkmark)
+const SuccessIcon = () => (
+  <svg width="150" height="150" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 6L9 17L4 12" stroke="green" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+// Failure SVG Icon (Red Circle with X)
+const FailureIcon = () => (
+  <svg width="150" height="150" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" stroke="red" strokeWidth="3" />
+    <path d="M8 8L16 16M16 8L8 16" stroke="red" strokeWidth="3" strokeLinecap="round" />
   </svg>
 );
 
@@ -62,10 +94,12 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     recipientEmail: '',
     note: '',
     lockerNumber: '',
+    general: '',
   });
   const [view, setView] = useState('form');
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState('idle'); // 'idle', 'loading', 'success', 'failure'
+  const [submissionError, setSubmissionError] = useState('');
 
   useEffect(() => {
     if (view === 'form') {
@@ -108,22 +142,21 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       note: validateRequired(formData.note, 'Note').error,
       lockerNumber: validateLockerNumber(formData.lockerNumber).error,
     };
-    setErrors(newErrors);
+    setErrors((prev) => ({ ...prev, ...newErrors }));
     return Object.values(newErrors).every((error) => !error);
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    setLoading(true);
+    setSubmissionStatus('loading');
     try {
-      // Exclude OTP from the data sent to the database
       const submissionData = {
         email: initialData.email || '',
         recipientEmail: formData.recipientEmail,
         note: formData.note,
         lockerNumber: formData.lockerNumber,
-        date_received: null, // Set to null or a specific date if provided by user
+        date_received: null,
       };
 
       const response = await fetch('http://localhost:5000/api/activitylogs', {
@@ -134,16 +167,19 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
       if (response.ok) {
         const savedData = await response.json();
-        onNext({ ...formData, activity_log_id: savedData.id });
+        setSubmissionStatus('success');
+        setTimeout(() => {
+          onNext({ ...formData, activity_log_id: savedData.id });
+        }, 10000);
       } else {
         const errorData = await response.json();
-        setErrors((prev) => ({ ...prev, general: errorData.error || 'Failed to submit' }));
+        setSubmissionStatus('failure');
+        setSubmissionError(errorData.error || 'Failed to submit');
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      setErrors((prev) => ({ ...prev, general: 'Network error occurred' }));
-    } finally {
-      setLoading(false);
+      setSubmissionStatus('failure');
+      setSubmissionError('Network error occurred');
     }
   };
 
@@ -218,7 +254,72 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     .textarea-note::placeholder {
       color: var(--color-muted-light);
     }
+    .status-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .status-container.loading h2 {
+      margin: 40px 0;
+      font-size: 48px;
+      color: #333;
+    }
+    .status-container.loading p {
+      font-size: 32px;
+      color: #666;
+      line-height: 1.5;
+    }
+    .status-container:not(.loading) h2 {
+      margin: 30px 0;
+      font-size: 36px;
+      color: #333;
+    }
+    .status-container:not(.loading) p {
+      font-size: 24px;
+      color: #666;
+      line-height: 1.5;
+    }
   `;
+
+  if (submissionStatus === 'loading') {
+    return (
+      <div className="status-container loading">
+        <style>{styles}</style>
+        <LoadingIcon />
+        <h2>Processing Your Submission</h2>
+        <p>Organizing your documents...</p>
+      </div>
+    );
+  }
+
+  if (submissionStatus === 'success') {
+    return (
+      <div className="status-container loading">
+        <style>{styles}</style>
+        <SuccessIcon />
+        <h2>Successful Submission</h2>
+        <p>Please put your documents inside the assigned locker. I hope the recipient doesn’t get angry after reading them シ</p>
+      </div>
+    );
+  }
+
+  if (submissionStatus === 'failure') {
+    return (
+      <div className="status-container loading">
+        <style>{styles}</style>
+        <FailureIcon />
+        <h2>Failed Submission</h2>
+        <p>There is an error with your submission, please resubmit or call for assistance.</p>
+        {submissionError && <p>{submissionError}</p>}
+      </div>
+    );
+  }
 
   if (view === 'recipient') {
     return <SelectRecipient onSelect={handleFieldUpdate} onBack={() => handleViewChange('form')} />;
@@ -272,16 +373,14 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       />
       {errors.note && <p id="note-error" className="error-message" aria-live="polite">{errors.note}</p>}
 
-      
-
       {errors.general && <p className="error-message" aria-live="polite">{errors.general}</p>}
 
       <div className="action-button">
-        <Button type="secondary" onClick={onClose} disabled={loading}>
+        <Button type="secondary" onClick={onClose} disabled={submissionStatus !== 'idle'}>
           CANCEL
         </Button>
-        <Button type="primary" onClick={handleSubmit} disabled={loading}>
-          {loading ? 'SUBMITTING...' : 'SUBMIT'}
+        <Button type="primary" onClick={handleSubmit} disabled={submissionStatus !== 'idle'}>
+          SUBMIT
         </Button>
       </div>
     </>
