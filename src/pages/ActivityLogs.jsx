@@ -30,9 +30,9 @@ function ActivityLogs() {
       const response = await fetch('http://localhost:5000/api/activitylogs');
       if (!response.ok) throw new Error('Failed to fetch activity logs');
       const data = await response.json();
-      // Sort logs by most recent date (date_received or created_at)
+      // Sort logs by most recent date (date_received or created_at) in descending order
       const sortedLogs = data.sort((a, b) => 
-        new Date(a.date_received || a.created_at) - new Date(b.date_received || b.created_at)
+        new Date(b.date_received || b.created_at) - new Date(a.date_received || a.created_at)
       );
       setLogs(sortedLogs);
     } catch (err) {
