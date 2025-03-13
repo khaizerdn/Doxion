@@ -65,10 +65,10 @@ app.post('/api/send-otp', async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const mailOptions = {
-        from: `"Your App" <${process.env.EMAIL_USER}>`,
+        from: `"Doxion" <${process.env.EMAIL_USER}>`,
         to: email,
-        subject: 'Your OTP Code',
-        text: `Your OTP is ${otp}. It expires in 5 minutes.`,
+        subject: 'Confirm OTP',
+        text: `Your OTP is ${otp}. It expires in 2 minutes.`,
     };
 
     try {
@@ -223,35 +223,93 @@ app.delete('/api/recipients/:id', async (req, res) => {
     }
 });
 
-// POST /api/activitylogs - Save activity log data
+// Utility function to generate OTP
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Updated POST /api/activitylogs endpoint
 app.post('/api/activitylogs', async (req, res) => {
     const { email, recipientEmail, note, lockerNumber, date_received } = req.body;
 
+    // Validation
     if (!email) return res.status(400).json({ error: 'Sender email is required' });
     if (!recipientEmail) return res.status(400).json({ error: 'Recipient email is required' });
     if (!note) return res.status(400).json({ error: 'Note is required' });
     if (!lockerNumber) return res.status(400).json({ error: 'Locker number is required' });
 
     const id = uid.getUniqueID().toString();
+    const otp = generateOTP();
 
     try {
+        // Verify locker exists
         const [lockerRows] = await pool.execute('SELECT number FROM lockers WHERE number = ?', [lockerNumber]);
         if (lockerRows.length === 0) {
             return res.status(404).json({ error: 'Locker number does not exist' });
         }
 
+        // Verify recipient exists (no need to fetch name)
         const [recipientRows] = await pool.execute('SELECT email FROM recipients WHERE email = ?', [recipientEmail]);
         if (recipientRows.length === 0) {
             return res.status(404).json({ error: 'Recipient email does not exist' });
         }
 
+        // Insert submission data including OTP
         const [result] = await pool.execute(
-            'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, date_received) VALUES (?, ?, ?, ?, ?, ?)',
-            [id, email, recipientEmail, note, lockerNumber, date_received || null]
+            'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, otp, date_received) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [id, email, recipientEmail, note, lockerNumber, otp, date_received || null]
         );
 
         if (result.affectedRows === 1) {
-            console.log(`Activity log ${id} saved successfully for ${email}`);
+            // Format date and time (e.g., "March 13, 2025 at 10:00 AM")
+            const formattedDateTime = new Date().toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: true,
+            });
+
+            // Recipient's email
+            const recipientMailOptions = {
+                from: `"Doxion" <${process.env.EMAIL_USER}>`,
+                to: recipientEmail,
+                subject: `New Doxion Submission`,
+                text: `Dear Recipient,\n\n` +
+                    `A new document has been submitted to you via Doxion's Locker. Please use the following OTP or your registered PIN to retrieve it securely. Please read below the following submission details:\n\n` +
+                    `${formattedDateTime}\n` +
+                    `Locker Number: ${lockerNumber}\n` +
+                    `OTP: ${otp}\n` +
+                    `From: ${email}\n\n` +
+                    `Document:\n${note}\n\n` +
+                    `This is an automated message. Please do not reply directly to this email.`,
+            };
+
+            // Sender's email
+            const senderMailOptions = {
+                from: `"Doxion" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: 'Document Successfully Submitted',
+                text: `Dear Sender,\n\n` +
+                    `Your document was successfully submitted. You will be notified once the recipient retrieves it. Please read below the following submission details:\n\n` +
+                    `${formattedDateTime}\n` +
+                    `Locker Number: ${lockerNumber}\n` +
+                    `To: ${recipientEmail}\n\n` +
+                    `Note:\n${note}\n\n` +
+                    `This is an automated message. Please do not reply directly to this email.`,
+            };
+
+            // Send both emails concurrently
+            await Promise.all([
+                transporter.sendMail(recipientMailOptions),
+                transporter.sendMail(senderMailOptions),
+            ]).catch((emailError) => {
+                console.error('Error sending emails:', emailError);
+                // Log the error but don’t fail the response, as submission is already saved
+            });
+
+            console.log(`Activity log ${id} saved and emails sent successfully for ${email}`);
             res.status(201).json({
                 id,
                 email,
@@ -288,20 +346,20 @@ app.get('/api/activitylogs', async (req, res) => {
 app.put('/api/activitylogs/:id/receive', async (req, res) => {
     const { id } = req.params;
     try {
-      const [result] = await pool.execute(
-        'UPDATE activitylogs SET date_received = NOW() WHERE id = ? AND date_received IS NULL',
-        [id]
-      );
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Activity log not found or already received' });
-      }
-      const [updatedRows] = await pool.execute(
-        'SELECT id, email, recipientEmail, note, lockerNumber, created_at, date_received FROM activitylogs WHERE id = ?',
-        [id]
-      );
-      res.json(updatedRows[0]);
+        const [result] = await pool.execute(
+            'UPDATE activitylogs SET date_received = NOW() WHERE id = ? AND date_received IS NULL',
+            [id]
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Activity log not found or already received' });
+        }
+        const [updatedRows] = await pool.execute(
+            'SELECT id, email, recipientEmail, note, lockerNumber, created_at, date_received FROM activitylogs WHERE id = ?',
+            [id]
+        );
+        res.json(updatedRows[0]);
     } catch (error) {
-      handleDbError(res, error);
+        handleDbError(res, error);
     }
 });
 
