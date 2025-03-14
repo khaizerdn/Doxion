@@ -41,7 +41,7 @@ function Splash() {
     <>
       <style>{splashStyles}</style>
       <div className="splash-container" onClick={handleClick}>
-        <h1>TOUCH ME ANYWHERE TO START🥵</h1>
+        <h1>TOUCH ME NALANG TO START🥵</h1>
       </div>
     </>
   );

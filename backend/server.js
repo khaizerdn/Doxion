@@ -67,7 +67,7 @@ app.post('/api/send-otp', async (req, res) => {
     const mailOptions = {
         from: `"Doxion" <${process.env.EMAIL_USER}>`,
         to: email,
-        subject: 'Confirm OTP',
+        subject: 'Verify OTP',
         text: `Your OTP is ${otp}. It expires in 2 minutes.`,
     };
 
@@ -410,7 +410,7 @@ app.post('/api/receive', async (req, res) => {
             const senderMailOptions = {
                 from: `"Doxion" <${process.env.EMAIL_USER}>`,
                 to: log.email,
-                subject: 'Your Document Has Been Retrieved',
+                subject: 'Document Retrieved',
                 text: `Dear Sender,\n\n` +
                       `Your document submitted to ${log.recipientEmail} has been successfully retrieved:\n\n` +
                       `${formattedDateTime}\n` +
