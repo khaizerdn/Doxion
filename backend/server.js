@@ -248,7 +248,7 @@ app.post('/api/activitylogs', async (req, res) => {
             return res.status(404).json({ error: 'Locker number does not exist' });
         }
 
-        // Verify recipient exists (no need to fetch name)
+        // Verify recipient exists
         const [recipientRows] = await pool.execute('SELECT email FROM recipients WHERE email = ?', [recipientEmail]);
         if (recipientRows.length === 0) {
             return res.status(404).json({ error: 'Recipient email does not exist' });
@@ -261,7 +261,7 @@ app.post('/api/activitylogs', async (req, res) => {
         );
 
         if (result.affectedRows === 1) {
-            // Format date and time (e.g., "March 13, 2025 at 10:00 AM")
+            // Format date and time
             const formattedDateTime = new Date().toLocaleString('en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -277,7 +277,7 @@ app.post('/api/activitylogs', async (req, res) => {
                 to: recipientEmail,
                 subject: `New Doxion Submission`,
                 text: `Dear Recipient,\n\n` +
-                    `A new document has been submitted to you via Doxion's Locker. Please use the following OTP or your registered PIN to retrieve it securely. Please read below the following submission details:\n\n` +
+                    `A new document has been submitted to you via Doxion's Locker. Please use the following OTP to retrieve it securely:\n\n` +
                     `${formattedDateTime}\n` +
                     `Locker Number: ${lockerNumber}\n` +
                     `OTP: ${otp}\n` +
@@ -292,7 +292,7 @@ app.post('/api/activitylogs', async (req, res) => {
                 to: email,
                 subject: 'Document Successfully Submitted',
                 text: `Dear Sender,\n\n` +
-                    `Your document was successfully submitted. You will be notified once the recipient retrieves it. Please read below the following submission details:\n\n` +
+                    `Your document was successfully submitted. You will be notified once the recipient retrieves it:\n\n` +
                     `${formattedDateTime}\n` +
                     `Locker Number: ${lockerNumber}\n` +
                     `To: ${recipientEmail}\n\n` +
@@ -306,7 +306,6 @@ app.post('/api/activitylogs', async (req, res) => {
                 transporter.sendMail(senderMailOptions),
             ]).catch((emailError) => {
                 console.error('Error sending emails:', emailError);
-                // Log the error but don’t fail the response, as submission is already saved
             });
 
             console.log(`Activity log ${id} saved and emails sent successfully for ${email}`);
@@ -342,7 +341,7 @@ app.get('/api/activitylogs', async (req, res) => {
     }
 });
 
-// PUT /api/activitylogs/:id/receive - Update receive status
+// PUT /api/activitylogs/:id/receive - Update receive status (kept for reference)
 app.put('/api/activitylogs/:id/receive', async (req, res) => {
     const { id } = req.params;
     try {
@@ -358,6 +357,80 @@ app.put('/api/activitylogs/:id/receive', async (req, res) => {
             [id]
         );
         res.json(updatedRows[0]);
+    } catch (error) {
+        handleDbError(res, error);
+    }
+});
+
+// Updated POST /api/receive - Verify locker number and OTP, update all unclaimed entries
+app.post('/api/receive', async (req, res) => {
+    const { lockerNumber, otp } = req.body;
+
+    if (!lockerNumber) return res.status(400).json({ error: 'Locker number is required' });
+    if (!otp || !/^\d{6}$/.test(otp)) return res.status(400).json({ error: 'Valid 6-digit OTP is required' });
+
+    try {
+        // Step 1: Check if the OTP matches any unclaimed entry for the locker number
+        const [matchingRows] = await pool.execute(
+            'SELECT id FROM activitylogs WHERE lockerNumber = ? AND otp = ? AND date_received IS NULL LIMIT 1',
+            [lockerNumber, otp]
+        );
+
+        if (matchingRows.length === 0) {
+            return res.status(401).json({ error: 'Invalid locker number or OTP.' });
+        }
+
+        // Step 2: Update all unclaimed entries for this locker number
+        const [updateResult] = await pool.execute(
+            'UPDATE activitylogs SET date_received = NOW() WHERE lockerNumber = ? AND date_received IS NULL',
+            [lockerNumber]
+        );
+
+        if (updateResult.affectedRows === 0) {
+            throw new Error('No unclaimed documents to update');
+        }
+
+        // Step 3: Fetch all updated rows to notify senders
+        const [updatedRows] = await pool.execute(
+            'SELECT id, email, recipientEmail, note, lockerNumber FROM activitylogs WHERE lockerNumber = ? AND date_received IS NOT NULL AND DATE(date_received) = DATE(NOW())',
+            [lockerNumber]
+        );
+
+        // Step 4: Notify all senders
+        const formattedDateTime = new Date().toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true,
+        });
+
+        const emailPromises = updatedRows.map((log) => {
+            const senderMailOptions = {
+                from: `"Doxion" <${process.env.EMAIL_USER}>`,
+                to: log.email,
+                subject: 'Your Document Has Been Retrieved',
+                text: `Dear Sender,\n\n` +
+                      `Your document submitted to ${log.recipientEmail} has been successfully retrieved:\n\n` +
+                      `${formattedDateTime}\n` +
+                      `Locker Number: ${log.lockerNumber}\n\n` +
+                      `Note:\n${log.note}\n\n` +
+                      `This is an automated message. Please do not reply directly to this email.`,
+            };
+            return transporter.sendMail(senderMailOptions).catch((emailError) => {
+                console.error(`Error sending retrieval notification to ${log.email}:`, emailError);
+            });
+        });
+
+        await Promise.all(emailPromises);
+
+        console.log(`All unclaimed documents from locker ${lockerNumber} retrieved with OTP ${otp}, updated ${updateResult.affectedRows} entries`);
+        res.status(200).json({
+            lockerNumber,
+            updatedCount: updateResult.affectedRows,
+            message: `All unclaimed documents (${updateResult.affectedRows}) in locker ${lockerNumber} unlocked successfully`,
+        });
     } catch (error) {
         handleDbError(res, error);
     }

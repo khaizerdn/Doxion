@@ -110,8 +110,7 @@ function TermsAndConditions() {
 
         <h2 style={termsStyles.heading2}>Contact Information</h2>
         <p style={termsStyles.text}>
-          For any questions, concerns, or feedback regarding the Document Locker System, please email{' '}
-          <a href="mailto:doxion.system@gmail.com">doxion.system@gmail.com</a> or reach out to the developers directly.
+          For any questions, concerns, or feedback regarding the Document Locker System, please email doxion.system@gmail.com or reach out to the developers directly.
         </p>
 
         <hr style={termsStyles.separator} />

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Button from './components/Button';
 import Input from './components/Input';
+import Lottie from 'react-lottie';
+import searchDocuAnimationData from '../assets/SearchDocuAnimation.json';
 
 // Locker SVG Icon (reused from SubmissionForm)
 const LockerIcon = () => (
@@ -29,16 +31,23 @@ const LockerIcon = () => (
   </svg>
 );
 
+// Success SVG Icon (Green Checkmark)
+const SuccessIcon = () => (
+  <svg width="150" height="150" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 6L9 17L4 12" stroke="green" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const ReceiveForm = ({ onClose }) => {
   const [formData, setFormData] = useState({
     lockerNumber: '',
-    pin: ['', '', '', '', '', ''], // Array for 6-digit PIN
+    pin: ['', '', '', '', '', ''], // Array for 6-digit OTP
   });
   const [errors, setErrors] = useState({
     lockerNumber: '',
     pin: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('idle'); // 'idle', 'loading', 'success'
   const inputRefs = useRef([]);
   const hasMounted = useRef(false);
 
@@ -49,6 +58,19 @@ const ReceiveForm = ({ onClose }) => {
       inputRefs.current[0]?.focus();
     }
   }, []);
+
+  const LoadingIcon = () => {
+    const defaultOptions = {
+      loop: true,
+      autoplay: true,
+      animationData: searchDocuAnimationData,
+      rendererSettings: {
+        preserveAspectRatio: 'xMidYMid slice',
+      },
+    };
+
+    return <Lottie options={defaultOptions} height={250} width={250} />;
+  };
 
   const styles = `
     .input-wrapper {
@@ -62,7 +84,7 @@ const ReceiveForm = ({ onClose }) => {
       background-color: var(--elevation-1);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
       transition: border-color 0.3s ease;
-      overflow: hidden; /* Ensures content respects border-radius */
+      overflow: hidden;
     }
     .input-wrapper:focus-within {
       border-color: ${errors.lockerNumber ? 'var(--color-error)' : 'var(--color-primary)'};
@@ -76,7 +98,7 @@ const ReceiveForm = ({ onClose }) => {
       background: transparent;
       border: none;
       outline: none;
-      border-radius: var(--global-border-radius) 0 0 var(--global-border-radius); /* Matches SubmissionForm */
+      border-radius: var(--global-border-radius) 0 0 var(--global-border-radius);
     }
     .select-icon {
       width: var(--global-input-height);
@@ -88,8 +110,8 @@ const ReceiveForm = ({ onClose }) => {
       border-left: 1px solid var(--elevation-3);
       background-color: var(--elevation-1);
       cursor: pointer;
-      transition: background-color 0.2s ease;
-      border-radius: 0 var(--global-border-radius) var(--global-border-radius) 0; /* Adds right-side radius */
+      transition: background-color 0.3s ease;
+      border-radius: 0 var(--global-border-radius) var(--global-border-radius) 0;
     }
     .select-icon:hover {
       background-color: var(--elevation-2);
@@ -125,6 +147,37 @@ const ReceiveForm = ({ onClose }) => {
     .action-button button {
       flex: 1;
     }
+    .status-container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(255, 255, 255, 0.95);
+      z-index: 1000;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .status-container h2 {
+      margin: 30px 0;
+      font-size: var(--font-size-3);
+      color: #333;
+    }
+    .status-container p {
+      font-size: var(--font-size-4);
+      color: #666;
+      line-height: 1.5;
+      max-width: 600px;
+    }
+    .status-container.loading h2 {
+      margin: 40px 0;
+      font-size: var(--font-size-3);
+    }
+    .status-container.loading p {
+      font-size: var(--font-size-4);
+    }
   `;
 
   const handleLockerChange = (e) => {
@@ -153,14 +206,14 @@ const ReceiveForm = ({ onClose }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.lockerNumber.trim()) {
       newErrors.lockerNumber = 'Locker number is required';
     }
-    
+
     const pinString = formData.pin.join('');
     if (pinString.length !== 6 || !/^\d{6}$/.test(pinString)) {
-      newErrors.pin = 'Please enter a valid 6-digit PIN';
+      newErrors.pin = 'Please enter a valid 6-digit OTP or PIN';
     }
 
     setErrors(newErrors);
@@ -170,11 +223,11 @@ const ReceiveForm = ({ onClose }) => {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    setLoading(true);
+    setStatus('loading');
     try {
       const submissionData = {
         lockerNumber: formData.lockerNumber,
-        pin: formData.pin.join(''),
+        otp: formData.pin.join(''),
       };
 
       const response = await fetch('http://localhost:5000/api/receive', {
@@ -184,21 +237,51 @@ const ReceiveForm = ({ onClose }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to verify receive request');
+        const errorData = await response.json();
+        setErrors((prev) => ({
+          ...prev,
+          pin: errorData.error || 'Invalid locker number or OTP.',
+        }));
+        setStatus('idle');
+        return;
       }
 
-      console.log('Receive request successful:', submissionData);
-      onClose();
+      const data = await response.json();
+      setStatus('success');
+      setTimeout(() => {
+        console.log('Documents retrieved:', data);
+        onClose();
+      }, 10000); // Updated to 10 seconds
     } catch (error) {
       setErrors((prev) => ({
         ...prev,
-        pin: error.message || 'Invalid locker number or PIN',
+        pin: error.message || 'An error occurred. Please try again.',
       }));
-      console.error('Receive error:', error);
-    } finally {
-      setLoading(false);
+      setStatus('idle');
     }
   };
+
+  if (status === 'loading') {
+    return (
+      <div className="status-container loading">
+        <style>{styles}</style>
+        <LoadingIcon />
+        <h2>Processing Reception</h2>
+        <p>Searching your documents...</p>
+      </div>
+    );
+  }
+
+  if (status === 'success') {
+    return (
+      <div className="status-container">
+        <style>{styles}</style>
+        <SuccessIcon /> {/* Added SuccessIcon */}
+        <h2>Document Found</h2>
+        <p>You may now retrieve the documents from locker {formData.lockerNumber}! I hope this papers doesn’t make you angry シ</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -208,11 +291,11 @@ const ReceiveForm = ({ onClose }) => {
           <p style={{ fontSize: 'var(--font-size-5)' }}>
             Receive (Step 1 of 1)
           </p>
-          
-          <h2>Receive Documents</h2>
-          
+
+          <h2>Receive Document</h2>
+
           <p style={{ marginBottom: '10px' }}>
-            Please enter your locker number and 6-digit PIN below.
+            Please enter your locker number and 6-digit OTP below.
           </p>
 
           {/* Locker Input */}
@@ -234,7 +317,7 @@ const ReceiveForm = ({ onClose }) => {
             </p>
           )}
 
-          {/* PIN/OTP Input */}
+          {/* OTP Input */}
           <div className="pin-container">
             {formData.pin.map((digit, index) => (
               <input
@@ -246,7 +329,7 @@ const ReceiveForm = ({ onClose }) => {
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 maxLength={1}
                 ref={(el) => (inputRefs.current[index] = el)}
-                aria-label={`PIN digit ${index + 1}`}
+                aria-label={`OTP digit ${index + 1}`}
               />
             ))}
           </div>
@@ -261,16 +344,16 @@ const ReceiveForm = ({ onClose }) => {
             <Button
               type="secondary"
               onClick={onClose}
-              disabled={loading}
+              disabled={status === 'loading'}
             >
               CANCEL
             </Button>
             <Button
               type="primary"
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={status === 'loading'}
             >
-              {loading ? 'VERIFYING...' : 'CONFIRM'}
+              CONFIRM
             </Button>
           </div>
         </div>

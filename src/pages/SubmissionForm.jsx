@@ -1,4 +1,3 @@
-// SubmissionForm.jsx
 import React, { useState, useEffect } from 'react';
 import Lottie from 'react-lottie';
 import loadingAnimationData from '../assets/LoadingAnimation.json'; // Adjust path as needed
@@ -62,8 +61,8 @@ const LoadingIcon = () => {
     autoplay: true,
     animationData: loadingAnimationData,
     rendererSettings: {
-      preserveAspectRatio: 'xMidYMid slice'
-    }
+      preserveAspectRatio: 'xMidYMid slice',
+    },
   };
 
   return <Lottie options={defaultOptions} height={250} width={250} />;
@@ -170,7 +169,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         setSubmissionStatus('success');
         setTimeout(() => {
           onNext({ ...formData, activity_log_id: savedData.id });
-        }, 10000);
+        }, 10000); // Updated to 10 seconds
       } else {
         const errorData = await response.json();
         setSubmissionStatus('failure');
@@ -190,7 +189,9 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       width: 100%;
       height: var(--global-input-height);
       margin: 10px 0;
-      border: 1px solid ${errors.recipientEmail || errors.lockerNumber ? 'var(--color-error)' : 'var(--elevation-3)'};
+      border: 1px solid ${
+        errors.recipientEmail || errors.lockerNumber ? 'var(--color-error)' : 'var(--elevation-3)'
+      };
       border-radius: var(--global-border-radius);
       background-color: var(--elevation-1);
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -198,7 +199,9 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       transition: border-color 0.3s ease;
     }
     .input-wrapper:focus-within {
-      border-color: ${errors.recipientEmail || errors.lockerNumber ? 'var(--color-error)' : 'var(--color-primary)'};
+      border-color: ${
+        errors.recipientEmail || errors.lockerNumber ? 'var(--color-error)' : 'var(--color-primary)'
+      };
     }
     .input-wrapper .input-field {
       flex: 1;
@@ -267,21 +270,22 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     }
     .status-container.loading h2 {
       margin: 40px 0;
-      font-size: 48px;
+      font-size: var(--font-size-3);
       color: #333;
     }
     .status-container.loading p {
-      font-size: 32px;
+      font-size: var(--font-size-4);
       color: #666;
       line-height: 1.5;
+      max-width: 500px;
     }
     .status-container:not(.loading) h2 {
       margin: 30px 0;
-      font-size: 36px;
+      font-size: var(--font-size-3);
       color: #333;
     }
     .status-container:not(.loading) p {
-      font-size: 24px;
+      font-size: var(--font-size-4);
       color: #666;
       line-height: 1.5;
     }
@@ -292,7 +296,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       <div className="status-container loading">
         <style>{styles}</style>
         <LoadingIcon />
-        <h2>Processing Your Submission</h2>
+        <h2>Processing Submission</h2>
         <p>Organizing your documents...</p>
       </div>
     );
@@ -300,18 +304,21 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
   if (submissionStatus === 'success') {
     return (
-      <div className="status-container loading">
+      <div className="status-container">
         <style>{styles}</style>
         <SuccessIcon />
         <h2>Successful Submission</h2>
-        <p>Please put your documents inside the assigned locker. I hope the recipient doesn’t get angry after reading them シ</p>
+        <p>
+          You may now place your document in locker {formData.lockerNumber}! I hope the recipient doesn’t get angry
+          after reading it シ
+        </p>
       </div>
     );
   }
 
   if (submissionStatus === 'failure') {
     return (
-      <div className="status-container loading">
+      <div className="status-container">
         <style>{styles}</style>
         <FailureIcon />
         <h2>Failed Submission</h2>
