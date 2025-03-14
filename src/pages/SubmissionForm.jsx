@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Lottie from 'react-lottie';
 import loadingAnimationData from '../assets/LoadingAnimation.json'; // Adjust path as needed
 import Input from '../pages/components/Input';
@@ -7,7 +7,7 @@ import SelectRecipient from './SelectRecipient';
 import SelectLocker from './SelectLocker';
 import { validateEmail, validateRequired, validateLockerNumber } from '../utils/validators';
 
-// Send Mail SVG Icon (Envelope)
+// SVG Icons (Extracted as separate components could be further optimized into a separate file)
 const SendMailIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -27,7 +27,6 @@ const SendMailIcon = () => (
   </svg>
 );
 
-// Locker SVG Icon
 const LockerIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -54,7 +53,6 @@ const LockerIcon = () => (
   </svg>
 );
 
-// Loading Animation Component using Lottie with imported JSON
 const LoadingIcon = () => {
   const defaultOptions = {
     loop: true,
@@ -64,24 +62,32 @@ const LoadingIcon = () => {
       preserveAspectRatio: 'xMidYMid slice',
     },
   };
-
   return <Lottie options={defaultOptions} height={250} width={250} />;
 };
 
-// Success SVG Icon (Green Checkmark)
 const SuccessIcon = () => (
   <svg width="150" height="150" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M20 6L9 17L4 12" stroke="green" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
-// Failure SVG Icon (Red Circle with X)
 const FailureIcon = () => (
   <svg width="150" height="150" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="12" r="10" stroke="red" strokeWidth="3" />
     <path d="M8 8L16 16M16 8L8 16" stroke="red" strokeWidth="3" strokeLinecap="round" />
   </svg>
 );
+
+// Randomized success messages with different emotions
+const getRandomSuccessMessage = (lockerNumber) => {
+  const messages = [
+    `You can now put your document in locker ${lockerNumber}! I hope the recipient doesn't get angry after reading it... 😨`,
+    `You can now put your document in locker ${lockerNumber}! Wishing the recipient doesn’t feel sad about it... 😢`,
+    `You can now put your document in locker ${lockerNumber}! Let’s hope the recipient is surprised in a good way! 😮`,
+    `You can now put your document in locker ${lockerNumber}! I think the recipient will laughs out loud reading it! 😂`,
+  ];
+  return messages[Math.floor(Math.random() * messages.length)];
+};
 
 const SubmissionForm = ({ onNext, onClose, initialData }) => {
   const [formData, setFormData] = useState({
@@ -100,40 +106,31 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
   const [submissionStatus, setSubmissionStatus] = useState('idle'); // 'idle', 'loading', 'success', 'failure'
   const [submissionError, setSubmissionError] = useState('');
 
-  useEffect(() => {
-    if (view === 'form') {
-      setTimeout(() => {
-        window.scrollTo({ top: scrollPosition, behavior: 'instant' });
-      }, 0);
-    }
-  }, [view]);
+  // Memoized callbacks to prevent unnecessary re-renders
+  const handleChange = useCallback((field) => (e) => {
+    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [field]: '' }));
+  }, []);
 
-  const handleChange = (field) => (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: e.target.value,
-    }));
-    setErrors((prev) => ({
-      ...prev,
-      [field]: '',
-    }));
-  };
-
-  const handleFieldUpdate = (newData) => {
+  const handleFieldUpdate = useCallback((newData) => {
     setFormData((prev) => ({
       ...prev,
       lockerNumber: newData.lockerNumber || prev.lockerNumber,
       recipientEmail: newData.recipientEmail || prev.recipientEmail,
     }));
     setView('form');
-  };
+  }, []);
 
-  const handleViewChange = (newView) => {
-    if (view === 'form') {
-      setScrollPosition(window.scrollY);
-    }
+  const handleViewChange = useCallback((newView) => {
+    if (view === 'form') setScrollPosition(window.scrollY);
     setView(newView);
-  };
+  }, [view]);
+
+  useEffect(() => {
+    if (view === 'form') {
+      window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+    }
+  }, [view, scrollPosition]);
 
   const validateForm = () => {
     const newErrors = {
@@ -167,9 +164,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       if (response.ok) {
         const savedData = await response.json();
         setSubmissionStatus('success');
-        setTimeout(() => {
-          onNext({ ...formData, activity_log_id: savedData.id });
-        }, 10000); // Updated to 10 seconds
+        setTimeout(() => onNext({ ...formData, activity_log_id: savedData.id }), 10000);
       } else {
         const errorData = await response.json();
         setSubmissionStatus('failure');
@@ -182,6 +177,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     }
   };
 
+  // Consolidated styles
   const styles = `
     .input-wrapper {
       display: flex;
@@ -212,7 +208,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       background: transparent;
       border: none;
       outline: none;
-      border-radius: var(--global-border-radius) 0 0 var(--global-border-radius);
     }
     .input-wrapper .select-icon {
       width: var(--global-input-height);
@@ -232,13 +227,10 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     .textarea-note {
       width: 100%;
       min-height: 400px;
-      padding: 30px;
-      padding-top: 53px;
-      padding-bottom: 0px;
+      padding: 30px 30px 0;
       margin: 10px 0;
       font-size: var(--font-size-2);
       font-family: inherit;
-      font-weight: normal;
       color: var(--color-muted-dark);
       background-color: var(--elevation-1);
       border: 1px solid ${errors.note ? 'var(--color-error)' : 'var(--elevation-3)'};
@@ -264,7 +256,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
       text-align: center;
       box-sizing: border-box;
     }
@@ -277,7 +268,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       font-size: var(--font-size-4);
       color: #666;
       line-height: 1.5;
-      max-width: 500px;
+      max-width: 900px;
     }
     .status-container:not(.loading) h2 {
       margin: 30px 0;
@@ -289,8 +280,14 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       color: #666;
       line-height: 1.5;
     }
+    .error-message {
+      color: var(--color-error);
+      font-size: var(--font-size-5);
+      margin: 5px 0;
+    }
   `;
 
+  // Render logic
   if (submissionStatus === 'loading') {
     return (
       <div className="status-container loading">
@@ -308,10 +305,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         <style>{styles}</style>
         <SuccessIcon />
         <h2>Successful Submission</h2>
-        <p>
-          You may now place your document in locker {formData.lockerNumber}! I hope the recipient doesn’t get angry
-          after reading it シ
-        </p>
+        <p>{getRandomSuccessMessage(formData.lockerNumber)}</p>
       </div>
     );
   }
@@ -339,9 +333,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     <>
       <style>{styles}</style>
       <h2>Submission Form</h2>
-      <p style={{ marginBottom: '10px' }}>
-        Please fill up the form below to proceed.
-      </p>
+      <p style={{ marginBottom: '10px' }}>Please fill up the form below to proceed.</p>
       <div className="input-wrapper" tabIndex={0}>
         <Input
           placeholder="Recipient Email Address"
@@ -349,8 +341,17 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
           onChange={handleChange('recipientEmail')}
           emailError={errors.recipientEmail}
           className="input-field"
+          aria-label="Recipient Email Address"
         />
-        <div className="select-icon" title="Select Recipient" onClick={() => handleViewChange('recipient')}>
+        <div
+          className="select-icon"
+          title="Select Recipient"
+          onClick={() => handleViewChange('recipient')}
+          role="button"
+          aria-label="Select Recipient"
+          tabIndex={0}
+          onKeyPress={(e) => e.key === 'Enter' && handleViewChange('recipient')}
+        >
           <SendMailIcon />
         </div>
       </div>
@@ -363,8 +364,17 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
           onChange={handleChange('lockerNumber')}
           emailError={errors.lockerNumber}
           className="input-field"
+          aria-label="Locker Number"
         />
-        <div className="select-icon" title="Select Locker" onClick={() => handleViewChange('locker')}>
+        <div
+          className="select-icon"
+          title="Select Locker"
+          onClick={() => handleViewChange('locker')}
+          role="button"
+          aria-label="Select Locker"
+          tabIndex={0}
+          onKeyPress={(e) => e.key === 'Enter' && handleViewChange('locker')}
+        >
           <LockerIcon />
         </div>
       </div>
@@ -377,6 +387,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         onChange={handleChange('note')}
         aria-invalid={!!errors.note}
         aria-describedby={errors.note ? 'note-error' : undefined}
+        aria-label="Note"
       />
       {errors.note && <p id="note-error" className="error-message" aria-live="polite">{errors.note}</p>}
 
