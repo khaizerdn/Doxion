@@ -82,9 +82,9 @@ const FailureIcon = () => (
 const getRandomSuccessMessage = (lockerNumber) => {
   const messages = [
     `You can now put your document in locker ${lockerNumber}! I hope the recipient doesn't get angry after reading it... 😨`,
-    `You can now put your document in locker ${lockerNumber}! Wishing the recipient doesn’t feel sad about it... 😢`,
-    `You can now put your document in locker ${lockerNumber}! Let’s hope the recipient is surprised in a good way! 😮`,
-    `You can now put your document in locker ${lockerNumber}! I think the recipient will laughs out loud reading it! 😂`,
+    `You can now put your document in locker ${lockerNumber}! Wishing the recipient doesn’t feel sad after reading it... 😢`,
+    `You can now put your document in locker ${lockerNumber}! I think the recipient will be surprised after reading it 😉`,
+    `You can now put your document in locker ${lockerNumber}! I think the recipient will laughs out loud reading it 😂`,
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 };

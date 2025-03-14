@@ -8,6 +8,7 @@ import AddRecipient from './pages/Recipient';
 import Lockers from './pages/Lockers';
 import ActivityLogs from './pages/ActivityLogs'; // New import
 import { IdleTimeoutHandler } from './utils/useIdleTimeout';
+import AdminSettings from './pages/AdminSettings';
 
 function App() {
   return (
@@ -21,7 +22,8 @@ function App() {
           <Route path="/adminpanel" element={<AdminPanel />} />
           <Route path="/recipients" element={<AddRecipient />} />
           <Route path="/lockers" element={<Lockers />} />
-          <Route path="/activitylogs" element={<ActivityLogs />} /> {/* New route */}
+          <Route path="/activitylogs" element={<ActivityLogs />} />
+          <Route path="/admin-settings" element={<AdminSettings />} />
         </Routes>
       </div>
     </Router>

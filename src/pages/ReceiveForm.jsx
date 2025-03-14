@@ -3,6 +3,7 @@ import Button from './components/Button';
 import Input from './components/Input';
 import Lottie from 'react-lottie';
 import searchDocuAnimationData from '../assets/SearchDocuAnimation.json';
+import SelectUnreceivedLocker from './SelectUnreceivedLocker'; // Adjust path as needed
 
 // Locker SVG Icon
 const LockerIcon = () => (
@@ -51,13 +52,13 @@ const LoadingIcon = () => {
   return <Lottie options={defaultOptions} height={250} width={250} />;
 };
 
-// Randomized success messages with different emotions
+// Randomized success messages
 const getRandomSuccessMessage = (lockerNumber) => {
   const messages = [
-    `You may now retrieve the documents in locker ${lockerNumber}! I hope it doesn't make you angry... 😨`,
-    `You may now retrieve the documents in locker ${lockerNumber}! Wishing they don’t make you feel sad... 😢`,
-    `You may now retrieve the documents in locker ${lockerNumber}! Prepare to be amazed! 😮`,
-    `You may now retrieve the documents in locker ${lockerNumber}! Maybe they’ll make you laugh! 😂`,
+    `You may now retrieve the documents in locker ${lockerNumber}! I hope it doesn't make you angry after reading it... 😨`,
+    `You may now retrieve the documents in locker ${lockerNumber}! Wishing they don’t make you feel sad after readng it... 😢`,
+    `You may now retrieve the documents in locker ${lockerNumber}! Prepare to be amazed after reading it 😮`,
+    `You may now retrieve the documents in locker ${lockerNumber}! Maybe they’ll make you laugh after reading it 😂`,
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 };
@@ -65,37 +66,41 @@ const getRandomSuccessMessage = (lockerNumber) => {
 const ReceiveForm = ({ onClose }) => {
   const [formData, setFormData] = useState({
     lockerNumber: '',
-    pin: ['', '', '', '', '', ''], // Array for 6-digit OTP
+    pin: ['', '', '', '', '', ''],
   });
   const [errors, setErrors] = useState({
     lockerNumber: '',
     pin: '',
   });
-  const [status, setStatus] = useState('idle'); // 'idle', 'loading', 'success'
+  const [status, setStatus] = useState('idle');
+  const [showLockerSelect, setShowLockerSelect] = useState(false);
   const inputRefs = useRef([]);
 
-  // Focus first PIN input on mount
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
 
-  // Memoized event handlers
   const handleLockerChange = useCallback((e) => {
     setFormData((prev) => ({ ...prev, lockerNumber: e.target.value }));
     setErrors((prev) => ({ ...prev, lockerNumber: '' }));
   }, []);
 
+  const handleLockerSelect = useCallback((data) => {
+    setFormData((prev) => ({ ...prev, lockerNumber: data.lockerNumber }));
+    setShowLockerSelect(false);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setShowLockerSelect(false);
+  }, []);
+
   const handlePinChange = useCallback((index, value) => {
     if (!/^[0-9]?$/.test(value)) return;
-
     const newPin = [...formData.pin];
     newPin[index] = value;
     setFormData((prev) => ({ ...prev, pin: newPin }));
     setErrors((prev) => ({ ...prev, pin: '' }));
-
-    if (value && index < 5) {
-      inputRefs.current[index + 1].focus();
-    }
+    if (value && index < 5) inputRefs.current[index + 1].focus();
   }, [formData.pin]);
 
   const handleKeyDown = useCallback((index, e) => {
@@ -106,13 +111,10 @@ const ReceiveForm = ({ onClose }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.lockerNumber.trim()) {
-      newErrors.lockerNumber = 'Locker number is required';
-    }
+    if (!formData.lockerNumber.trim()) newErrors.lockerNumber = 'Locker number is required';
     const pinString = formData.pin.join('');
-    if (pinString.length !== 6 || !/^\d{6}$/.test(pinString)) {
+    if (pinString.length !== 6 || !/^\d{6}$/.test(pinString))
       newErrors.pin = 'Please enter a valid 6-digit OTP or PIN';
-    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -135,20 +137,14 @@ const ReceiveForm = ({ onClose }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        setErrors((prev) => ({
-          ...prev,
-          pin: errorData.error || 'Invalid locker number or OTP.',
-        }));
+        setErrors((prev) => ({ ...prev, pin: errorData.error || 'Invalid locker number or OTP.' }));
         setStatus('idle');
         return;
       }
 
-      const data = await response.json();
+      await response.json();
       setStatus('success');
-      setTimeout(() => {
-        console.log('Documents retrieved:', data);
-        onClose();
-      }, 10000); // 10-second delay
+      setTimeout(() => onClose(), 10000);
     } catch (error) {
       setErrors((prev) => ({
         ...prev,
@@ -158,7 +154,6 @@ const ReceiveForm = ({ onClose }) => {
     }
   };
 
-  // Consolidated styles
   const styles = `
     .input-wrapper {
       display: flex;
@@ -255,13 +250,6 @@ const ReceiveForm = ({ onClose }) => {
       line-height: 1.5;
       max-width: 900px;
     }
-    .status-container.loading h2 {
-      margin: 40px 0;
-      font-size: var(--font-size-3);
-    }
-    .status-container.loading p {
-      font-size: var(--font-size-4);
-    }
     .error-message {
       color: var(--color-error);
       font-size: var(--font-size-5);
@@ -269,10 +257,9 @@ const ReceiveForm = ({ onClose }) => {
     }
   `;
 
-  // Render logic
   if (status === 'loading') {
     return (
-      <div className="status-container loading">
+      <div className="status-container">
         <style>{styles}</style>
         <LoadingIcon />
         <h2>Processing Reception</h2>
@@ -292,6 +279,15 @@ const ReceiveForm = ({ onClose }) => {
     );
   }
 
+  if (showLockerSelect) {
+    return (
+      <SelectUnreceivedLocker
+        onSelect={handleLockerSelect}
+        onBack={handleBack} // Updated to use onBack
+      />
+    );
+  }
+
   return (
     <>
       <style>{styles}</style>
@@ -303,7 +299,6 @@ const ReceiveForm = ({ onClose }) => {
             Please enter your locker number and 6-digit OTP below.
           </p>
 
-          {/* Locker Input */}
           <div className="input-wrapper">
             <Input
               className="input-field"
@@ -314,8 +309,9 @@ const ReceiveForm = ({ onClose }) => {
             />
             <div
               className="select-icon"
-              role="presentation"
-              aria-hidden="true"
+              onClick={() => setShowLockerSelect(true)}
+              role="button"
+              aria-label="Select unreceived locker"
             >
               <LockerIcon />
             </div>
@@ -326,7 +322,6 @@ const ReceiveForm = ({ onClose }) => {
             </p>
           )}
 
-          {/* OTP Input */}
           <div className="pin-container">
             {formData.pin.map((digit, index) => (
               <input
@@ -348,7 +343,6 @@ const ReceiveForm = ({ onClose }) => {
             </p>
           )}
 
-          {/* Action Buttons */}
           <div className="action-button">
             <Button type="secondary" onClick={onClose} disabled={status === 'loading'}>
               CANCEL

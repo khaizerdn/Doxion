@@ -436,6 +436,51 @@ app.post('/api/receive', async (req, res) => {
     }
 });
 
+app.post('/api/admin/set', async (req, res) => {
+    const { email, pin } = req.body;
+
+    // Input validation
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+        return res.status(400).json({ error: 'Valid email is required' });
+    }
+    if (!pin || !/^\d{6}$/.test(pin)) {
+        return res.status(400).json({ error: 'PIN must be a 6-digit number' });
+    }
+
+    try {
+        // Use the existing pool instead of creating a new connection
+        const [existing] = await pool.execute(
+            'SELECT id FROM users WHERE email = ?',
+            [email]
+        );
+
+        if (existing.length > 0) {
+            // Update existing admin
+            const [result] = await pool.execute(
+                'UPDATE users SET pin = ?, updated_at = NOW() WHERE email = ?',
+                [pin, email]
+            );
+            if (result.affectedRows === 0) {
+                throw new Error('Update failed');
+            }
+        } else {
+            // Insert new admin with a unique ID
+            const id = uid.getUniqueID().toString();
+            const [result] = await pool.execute(
+                'INSERT INTO users (id, email, pin, created_at) VALUES (?, ?, ?, NOW())',
+                [id, email, pin]
+            );
+            if (result.affectedRows === 0) {
+                throw new Error('Insert failed');
+            }
+        }
+
+        res.status(200).json({ message: 'Admin settings updated successfully' });
+    } catch (error) {
+        handleDbError(res, error);
+    }
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
     res.send('Backend server is running');

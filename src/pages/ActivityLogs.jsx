@@ -54,11 +54,9 @@ function ActivityLogs() {
     }
     .content-wrapper {
       width: 100%;
-      max-width: 960px;
     }
     .logs-container {
       width: 100%;
-      padding: 20px;
     }
     .header-section {
       display: flex;
