@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BackButton from './components/BackButton';
 import Button from './components/Button';
 import Input from './components/Input';
@@ -10,13 +11,11 @@ const LockerItem = ({ item, onEdit }) => {
   if (item.isAdd) {
     return (
       <>
-        <p style={{ marginBottom: '10px' }}>
-          Select any following lockers below to edit.
-        </p>
+        <p style={{ marginBottom: '10px' }}>Select any following lockers below to edit.</p>
         <li style={{ width: '100%', margin: '10px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Button
             type="primary"
-            onClick={() => onEdit(null)} // Null indicates adding a new locker
+            onClick={() => onEdit(null)}
             width="100%"
             height="100px"
             fontSize="2rem"
@@ -56,7 +55,49 @@ const LockerItem = ({ item, onEdit }) => {
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', padding: '20px', gap: '12px' }}>
         <span style={{ fontWeight: 'bold', fontSize: '2rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>Locker {item.number}</span>
-        <span style={{ fontSize: '1.625rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>{item.location}</span>
+        <span style={{ fontSize: '1.625rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>
+          {item.locks ? `${item.locks.replace('Lock', 'Lock ')} - ${item.ip_address || 'No IP'}` : 'No ESP Assigned'}
+        </span>
+      </div>
+    </li>
+  );
+};
+
+const EspDeviceItem = ({ item, onSelect }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const lockName = item.locks.replace('Lock', 'Lock ');
+
+  return (
+    <li
+      onClick={() => onSelect(item)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        width: '100%',
+        height: 'var(--global-input-height)',
+        margin: '10px 0',
+        backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.1)' : 'var(--elevation-1)',
+        border: '1px solid var(--elevation-3)',
+        borderRadius: 'var(--global-border-radius)',
+        cursor: 'pointer',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        boxShadow: isHovered ? '0 4px 12px rgba(0, 0, 0, 0.1)' : '0 1px 2px rgba(0, 0, 0, 0.05)',
+        transition: 'background-color 0.3s ease, box-shadow 0.3s ease',
+      }}
+    >
+      <div style={{ width: 'var(--global-input-height)', height: 'var(--global-input-height)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={{ width: '50%', height: '50%', fill: 'var(--elevation-2)' }}>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+        </svg>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', padding: '20px', gap: '12px' }}>
+        <span style={{ fontWeight: 'bold', fontSize: '2rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>{lockName}</span>
+        <span style={{ fontSize: '1.625rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>IP: {item.ip_address}</span>
+        <span style={{ fontSize: '1.625rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>
+          Last Detected: {new Date(item.detected_at).toLocaleString()}
+        </span>
       </div>
     </li>
   );
@@ -64,23 +105,38 @@ const LockerItem = ({ item, onEdit }) => {
 
 function Lockers() {
   const [lockers, setLockers] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ id: null, number: '', location: '' });
-  const [errors, setErrors] = useState({ number: '', location: '' });
+  const [espDevices, setEspDevices] = useState([]);
+  const [view, setView] = useState('lockers'); // 'lockers', 'form', or 'esp'
+  const [formData, setFormData] = useState({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
+  const [errors, setErrors] = useState({ number: '', device: '' });
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     fetchLockers();
+    fetchEspDevices();
   }, []);
 
   const fetchLockers = async () => {
     try {
       const response = await fetch('http://localhost:5000/api/lockers');
+      if (!response.ok) throw new Error('Failed to fetch lockers');
       const data = await response.json();
       setLockers(data);
     } catch (error) {
       console.error('Error fetching lockers:', error);
+    }
+  };
+
+  const fetchEspDevices = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/espdetected');
+      if (!response.ok) throw new Error('Failed to fetch ESP devices');
+      const data = await response.json();
+      setEspDevices(data);
+    } catch (error) {
+      console.error('Error fetching ESP devices:', error);
     }
   };
 
@@ -91,11 +147,18 @@ function Lockers() {
 
   const handleEdit = (item) => {
     if (item === null || item.isAdd) {
-      setFormData({ id: null, number: '', location: '' });
+      setFormData({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
     } else {
-      setFormData({ id: item.id, number: item.number, location: item.location });
+      setFormData({
+        id: item.id,
+        number: item.number,
+        device_name: item.device_name || '',
+        ip_address: item.ip_address || '',
+        locks: item.locks || '',
+        leds: item.leds || '',
+      });
     }
-    setShowForm(true);
+    setView('form');
   };
 
   const handleChange = (field) => (e) => {
@@ -106,8 +169,23 @@ function Lockers() {
   const validateForm = () => {
     const newErrors = {
       number: validateRequired(formData.number, 'Locker Number').error,
-      location: validateRequired(formData.location, 'Location').error,
+      device: '',
     };
+
+    // Check for duplicate device (device_name, ip_address, locks)
+    if (formData.device_name && formData.ip_address && formData.locks) {
+      const isDuplicate = lockers.some(
+        (locker) =>
+          locker.id !== formData.id && // Exclude the current locker being edited
+          locker.device_name === formData.device_name &&
+          locker.ip_address === formData.ip_address &&
+          locker.locks === formData.locks
+      );
+      if (isDuplicate) {
+        newErrors.device = 'This locker is already registered.';
+      }
+    }
+
     setErrors(newErrors);
     return Object.values(newErrors).every((error) => !error);
   };
@@ -118,10 +196,17 @@ function Lockers() {
     try {
       const url = formData.id ? `http://localhost:5000/api/lockers/${formData.id}` : 'http://localhost:5000/api/lockers';
       const method = formData.id ? 'PUT' : 'POST';
+      const body = {
+        number: formData.number,
+        device_name: formData.device_name,
+        ip_address: formData.ip_address,
+        locks: formData.locks,
+        leds: formData.leds,
+      };
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ number: formData.number, location: formData.location }),
+        body: JSON.stringify(body),
       });
       if (response.ok) {
         const updatedLocker = await response.json();
@@ -130,11 +215,11 @@ function Lockers() {
         } else {
           setLockers((prev) => [...prev, updatedLocker]);
         }
-        setFormData({ id: null, number: '', location: '' });
-        setShowForm(false);
+        setFormData({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
+        setView('lockers');
       } else {
         const errorData = await response.json();
-        setErrors((prev) => ({ ...prev, number: errorData.error }));
+        setErrors((prev) => ({ ...prev, number: errorData.error || 'Failed to save locker' }));
       }
     } catch (error) {
       console.error('Error saving locker:', error);
@@ -150,8 +235,8 @@ function Lockers() {
       const response = await fetch(`http://localhost:5000/api/lockers/${formData.id}`, { method: 'DELETE' });
       if (response.ok) {
         setLockers((prev) => prev.filter((locker) => locker.id !== formData.id));
-        setFormData({ id: null, number: '', location: '' });
-        setShowForm(false);
+        setFormData({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
+        setView('lockers');
       } else {
         console.error('Failed to delete locker');
       }
@@ -163,12 +248,63 @@ function Lockers() {
   };
 
   const handleCancel = () => {
-    setFormData({ id: null, number: '', location: '' });
-    setShowForm(false);
+    setFormData({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
+    setView('lockers');
+  };
+
+  const handleSelectEspView = () => {
+    setView('esp');
+  };
+
+  const handleSelectEsp = (device) => {
+    setFormData((prev) => ({
+      ...prev,
+      device_name: device.device_name,
+      ip_address: device.ip_address,
+      locks: device.locks,
+      leds: device.leds,
+    }));
+    setView('form');
   };
 
   const styles = `
-    .action-button { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+    .action-button { 
+      display: flex; 
+      justify-content: space-between; 
+      gap: 10px; 
+      margin-top: 20px; 
+    }
+    .esp-button {
+      width: 100%;
+      height: var(--global-input-height);
+      margin: 10px 0;
+      padding: 20px;
+      font-size: var(--font-size-2);
+      font-family: inherit;
+      font-weight: normal;
+      color: var(--color-muted-dark);
+      background-color: var(--elevation-1);
+      border: 1px solid var(--elevation-3);
+      border-radius: var(--global-border-radius);
+      cursor: pointer;
+      text-align: left;
+      outline: none;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .esp-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .esp-button:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .error-message {
+      color: red;
+      font-size: 0.875rem;
+      margin-top: 5px;
+    }
   `;
 
   return (
@@ -176,24 +312,51 @@ function Lockers() {
       <div className="content-wrapper">
         <style>{styles}</style>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '16px' }}>
-          <BackButton onClick={showForm ? handleCancel : () => window.history.back()} />
+          <BackButton
+            onClick={
+              view === 'form'
+                ? handleCancel
+                : view === 'esp'
+                ? () => setView('form')
+                : () => window.history.back()
+            }
+          />
           <h2 style={{ margin: 0 }}>
-            {!showForm ? 'Lockers' : (formData.id ? 'Edit Locker' : 'Add Locker')}
+            {view === 'lockers' ? 'Lockers' : view === 'form' ? (formData.id ? 'Edit Locker' : 'Add Locker') : 'ESP Devices'}
           </h2>
         </div>
-        {showForm ? (
+        {view === 'form' ? (
           <div style={{ width: '100%' }}>
             <p style={{ marginBottom: '10px' }}>
               {formData.id ? 'Edit the locker details below.' : 'Please fill up the form below to add a new locker.'}
             </p>
             <Input placeholder="Locker Number" value={formData.number} onChange={handleChange('number')} emailError={errors.number} />
             {errors.number && <p className="error-message" aria-live="polite">{errors.number}</p>}
-            <Input placeholder="Location" value={formData.location} onChange={handleChange('location')} emailError={errors.location} />
-            {errors.location && <p className="error-message" aria-live="polite">{errors.location}</p>}
+            <button className="esp-button" onClick={handleSelectEspView}>
+              {formData.locks
+                ? `${formData.locks.replace('Lock', 'Lock ')} - ${formData.ip_address || 'No IP'}`
+                : 'Select ESP Device'}
+            </button>
+            {errors.device && <p className="error-message" aria-live="polite">{errors.device}</p>}
             <div className="action-button">
               {formData.id && <Button type="secondary" onClick={handleDelete} disabled={loading}>DELETE</Button>}
               <Button type="primary" onClick={handleSubmit} disabled={loading}>{loading ? 'SAVING...' : 'CONFIRM'}</Button>
             </div>
+          </div>
+        ) : view === 'esp' ? (
+          <div style={{ width: '100%' }}>
+            <p style={{ marginBottom: '10px' }}>Select an ESP device from the list below.</p>
+            <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', width: '100%' }}>
+              {espDevices.length > 0 ? (
+                espDevices.map((device) => (
+                  <EspDeviceItem key={device.id} item={device} onSelect={handleSelectEsp} />
+                ))
+              ) : (
+                <li style={{ textAlign: 'center', padding: '20px', color: 'var(--color-muted-dark)' }}>
+                  No ESP devices detected yet.
+                </li>
+              )}
+            </ul>
           </div>
         ) : (
           <div style={{ width: '100%' }}>

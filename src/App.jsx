@@ -9,6 +9,7 @@ import Lockers from './pages/Lockers';
 import ActivityLogs from './pages/ActivityLogs'; // New import
 import { IdleTimeoutHandler } from './utils/useIdleTimeout';
 import AdminSettings from './pages/AdminSettings';
+import EspDevices from './pages/EspDevices';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/lockers" element={<Lockers />} />
           <Route path="/activitylogs" element={<ActivityLogs />} />
           <Route path="/admin-settings" element={<AdminSettings />} />
+          <Route path="/esp-devices" element={<EspDevices />} />
         </Routes>
       </div>
     </Router>

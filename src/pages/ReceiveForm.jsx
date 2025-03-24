@@ -3,7 +3,7 @@ import Button from './components/Button';
 import Input from './components/Input';
 import Lottie from 'react-lottie';
 import searchDocuAnimationData from '../assets/SearchDocuAnimation.json';
-import SelectUnreceivedLocker from './SelectUnreceivedLocker'; // Adjust path as needed
+import SelectUnreceivedLocker from './SelectUnreceivedLocker';
 
 // Locker SVG Icon
 const LockerIcon = () => (
@@ -56,7 +56,7 @@ const LoadingIcon = () => {
 const getRandomSuccessMessage = (lockerNumber) => {
   const messages = [
     `You may now retrieve the documents in locker ${lockerNumber}! I hope it doesn't make you angry after reading it... 😨`,
-    `You may now retrieve the documents in locker ${lockerNumber}! Wishing they don’t make you feel sad after readng it... 😢`,
+    `You may now retrieve the documents in locker ${lockerNumber}! Wishing they don’t make you feel sad after reading it... 😢`,
     `You may now retrieve the documents in locker ${lockerNumber}! Prepare to be amazed after reading it 😮`,
     `You may now retrieve the documents in locker ${lockerNumber}! Maybe they’ll make you laugh after reading it 😂`,
   ];
@@ -119,33 +119,75 @@ const ReceiveForm = ({ onClose }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const triggerLockerAndLed = async (ipAddress, lock, led) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/trigger-esp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip_address: ipAddress, lock, led }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to trigger ESP at ${ipAddress}`);
+      }
+
+      console.log(`Successfully triggered ${lock} and turned off ${led} at ${ipAddress}`);
+    } catch (error) {
+      console.error('Error triggering locker/LED:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setStatus('loading');
     try {
+      // Step 1: Validate OTP and update activity log
       const submissionData = {
         lockerNumber: formData.lockerNumber,
         otp: formData.pin.join(''),
       };
 
-      const response = await fetch('http://localhost:5000/api/receive', {
+      const receiveResponse = await fetch('http://localhost:5000/api/receive', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (!receiveResponse.ok) {
+        const errorData = await receiveResponse.json();
         setErrors((prev) => ({ ...prev, pin: errorData.error || 'Invalid locker number or OTP.' }));
         setStatus('idle');
         return;
       }
 
-      await response.json();
+      await receiveResponse.json();
+
+      // Step 2: Fetch locker details
+      const lockerResponse = await fetch('http://localhost:5000/api/lockers');
+      if (!lockerResponse.ok) throw new Error('Failed to fetch lockers');
+      const lockers = await lockerResponse.json();
+      
+      const selectedLocker = lockers.find((locker) => locker.number === formData.lockerNumber);
+      if (!selectedLocker) {
+        throw new Error(`Locker ${formData.lockerNumber} not found`);
+      }
+
+      // Step 3: Trigger locker and turn off LED
+      const { ip_address, locks, leds } = selectedLocker;
+      if (ip_address && locks && leds) {
+        await triggerLockerAndLed(ip_address, locks, leds);
+      } else {
+        console.warn('Locker missing ip_address, locks, or leds; skipping trigger');
+      }
+
+      // Step 4: Mark as successful
       setStatus('success');
       setTimeout(() => onClose(), 10000);
     } catch (error) {
+      console.error('Error processing reception:', error);
       setErrors((prev) => ({
         ...prev,
         pin: error.message || 'An error occurred. Please try again.',
@@ -263,7 +305,7 @@ const ReceiveForm = ({ onClose }) => {
         <style>{styles}</style>
         <LoadingIcon />
         <h2>Processing Reception</h2>
-        <p>Searching your documents...</p>
+        <p>Searching your documents and triggering locker...</p>
       </div>
     );
   }
@@ -283,7 +325,7 @@ const ReceiveForm = ({ onClose }) => {
     return (
       <SelectUnreceivedLocker
         onSelect={handleLockerSelect}
-        onBack={handleBack} // Updated to use onBack
+        onBack={handleBack}
       />
     );
   }

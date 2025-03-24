@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 
 // Base configuration object
 const configSettings = {
-    idleTimeout: 60000, // 60 seconds in milliseconds for idle timer
+    idleTimeout: 9999000, // 60 seconds in milliseconds for idle timer
     otpTimeout: 120000, // 120 seconds (2 minutes) in milliseconds for OTP timer
     showTimers: true, // Single flag to show all timers (idle and OTP)
     fontFamily: 'Inter, sans-serif' // Default font family
@@ -11,7 +11,7 @@ const configSettings = {
 // Track active timers based on showTimers
 const activeTimers = {
     idle: configSettings.showTimers,
-    otp: configSettings.showTimers
+    otp: configSettings.showTimers  
 };
 
 // TimerDisplay component with dynamic positioning

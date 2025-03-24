@@ -58,6 +58,82 @@ app.post('/api/generate-flake-ids', (req, res) => {
     res.json({ activity_log_id: activityLogId });
 });
 
+// Updated /api/espdetected to always insert new rows
+app.post('/api/espdetected', async (req, res) => {
+    const { deviceName, ipAddress, locks, leds } = req.body;
+    
+    if (!deviceName || !ipAddress) {
+        console.error('Missing required fields:', { deviceName, ipAddress });
+        return res.status(400).json({ error: 'Device name and IP address are required' });
+    }
+
+    console.log(`Received request: deviceName=${deviceName}, ipAddress=${ipAddress}, locks=${locks}, leds=${leds}`);
+
+    try {
+        const id = uid.getUniqueID().toString();
+        const [result] = await pool.execute(
+            'INSERT INTO espdetected_logs (id, device_name, ip_address, locks, leds, detected_at) VALUES (?, ?, ?, ?, ?, NOW())',
+            [id, deviceName, ipAddress, locks || null, leds || null]
+        );
+
+        if (result.affectedRows === 1) {
+            console.log(`Inserted ${deviceName} (lock ${locks}): IP=${ipAddress}, Time=${new Date().toISOString()}`);
+            res.status(201).json({ 
+                id, 
+                deviceName, 
+                ipAddress, 
+                locks, 
+                leds, 
+                detectedAt: new Date().toISOString(), 
+                message: 'ESP device logged successfully' 
+            });
+        } else {
+            console.error(`Insert failed for ${deviceName} (lock ${locks}): No rows affected`);
+            throw new Error('Failed to insert new ESP record');
+        }
+    } catch (error) {
+        console.error(`Error processing ${deviceName} (lock ${locks}):`, error);
+        handleDbError(res, error);
+    }
+});
+
+// Get all ESP detected logs (unchanged)
+app.get('/api/espdetected', async (req, res) => {
+    try {
+        const [rows] = await pool.execute('SELECT id, device_name, ip_address, locks, leds, detected_at FROM espdetected_logs');
+        console.log('Fetched ESP devices:', rows);
+        res.json(rows);
+    } catch (error) {
+        handleDbError(res, error);
+    }
+});
+
+app.post('/api/trigger-esp', async (req, res) => {
+    const { ip_address, lock, led, ledState = 'toggle' } = req.body;
+  
+    if (!ip_address || !lock || !led) {
+      return res.status(400).json({ error: 'ip_address, lock, and led are required' });
+    }
+  
+    try {
+      const lockUrl = `http://${ip_address}/${lock}`; // e.g., "http://192.168.1.191/LockA"
+      const ledUrl = ledState === 'off' ? `http://${ip_address}/${led}/off` : `http://${ip_address}/${led}`;
+  
+      // Trigger locker
+      const lockResponse = await fetch(lockUrl, { method: 'GET' });
+      if (!lockResponse.ok) throw new Error(`Failed to trigger locker at ${lockUrl}`);
+  
+      // Trigger LED
+      const ledResponse = await fetch(ledUrl, { method: 'GET' });
+      if (!ledResponse.ok) throw new Error(`Failed to trigger LED at ${ledUrl}`);
+  
+      res.status(200).json({ message: 'Locker and LED triggered successfully' });
+    } catch (error) {
+      console.error('Error triggering ESP:', error);
+      res.status(500).json({ error: 'Failed to trigger ESP', details: error.message });
+    }
+  });
+
 // Send OTP
 app.post('/api/send-otp', async (req, res) => {
     const { email } = req.body;
@@ -83,18 +159,18 @@ app.post('/api/send-otp', async (req, res) => {
 
 // Add Locker
 app.post('/api/lockers', async (req, res) => {
-    const { number, location } = req.body;
-    if (!number || !location) {
-        return res.status(400).json({ error: 'Locker number and location are required' });
+    const { number, device_name, ip_address, locks, leds } = req.body;
+    if (!number) {
+        return res.status(400).json({ error: 'Locker number is required' });
     }
 
     const id = uid.getUniqueID().toString();
     try {
         const [result] = await pool.execute(
-            'INSERT INTO lockers (id, number, location) VALUES (?, ?, ?)',
-            [id, number, location]
+            'INSERT INTO lockers (id, number, device_name, ip_address, locks, leds, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+            [id, number, device_name || null, ip_address || null, locks || null, leds || null]
         );
-        res.status(201).json({ id, number, location });
+        res.status(201).json({ id, number, device_name, ip_address, locks, leds, created_at: new Date().toISOString() });
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ error: 'Locker number already exists' });
@@ -106,7 +182,7 @@ app.post('/api/lockers', async (req, res) => {
 // Get All Lockers
 app.get('/api/lockers', async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT id, number, location FROM lockers');
+        const [rows] = await pool.execute('SELECT id, number, device_name, ip_address, locks, leds, created_at FROM lockers');
         res.json(rows);
     } catch (error) {
         handleDbError(res, error);
@@ -116,20 +192,20 @@ app.get('/api/lockers', async (req, res) => {
 // Update Locker
 app.put('/api/lockers/:id', async (req, res) => {
     const { id } = req.params;
-    const { number, location } = req.body;
-    if (!number || !location) {
-        return res.status(400).json({ error: 'Locker number and location are required' });
+    const { number, device_name, ip_address, locks, leds } = req.body;
+    if (!number) {
+        return res.status(400).json({ error: 'Locker number is required' });
     }
 
     try {
         const [result] = await pool.execute(
-            'UPDATE lockers SET number = ?, location = ? WHERE id = ?',
-            [number, location, id]
+            'UPDATE lockers SET number = ?, device_name = ?, ip_address = ?, locks = ?, leds = ? WHERE id = ?',
+            [number, device_name || null, ip_address || null, locks || null, leds || null, id]
         );
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Locker not found' });
         }
-        res.json({ id, number, location });
+        res.json({ id, number, device_name, ip_address, locks, leds });
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ error: 'Locker number already exists' });
@@ -228,11 +304,10 @@ const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Updated POST /api/activitylogs endpoint
+// POST /api/activitylogs
 app.post('/api/activitylogs', async (req, res) => {
     const { email, recipientEmail, note, lockerNumber, date_received } = req.body;
 
-    // Validation
     if (!email) return res.status(400).json({ error: 'Sender email is required' });
     if (!recipientEmail) return res.status(400).json({ error: 'Recipient email is required' });
     if (!note) return res.status(400).json({ error: 'Note is required' });
@@ -242,26 +317,22 @@ app.post('/api/activitylogs', async (req, res) => {
     const otp = generateOTP();
 
     try {
-        // Verify locker exists
         const [lockerRows] = await pool.execute('SELECT number FROM lockers WHERE number = ?', [lockerNumber]);
         if (lockerRows.length === 0) {
             return res.status(404).json({ error: 'Locker number does not exist' });
         }
 
-        // Verify recipient exists
         const [recipientRows] = await pool.execute('SELECT email FROM recipients WHERE email = ?', [recipientEmail]);
         if (recipientRows.length === 0) {
             return res.status(404).json({ error: 'Recipient email does not exist' });
         }
 
-        // Insert submission data including OTP
         const [result] = await pool.execute(
             'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, otp, date_received) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [id, email, recipientEmail, note, lockerNumber, otp, date_received || null]
         );
 
         if (result.affectedRows === 1) {
-            // Format date and time
             const formattedDateTime = new Date().toLocaleString('en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -271,7 +342,6 @@ app.post('/api/activitylogs', async (req, res) => {
                 hour12: true,
             });
 
-            // Recipient's email
             const recipientMailOptions = {
                 from: `"Doxion" <${process.env.EMAIL_USER}>`,
                 to: recipientEmail,
@@ -286,7 +356,6 @@ app.post('/api/activitylogs', async (req, res) => {
                     `This is an automated message. Please do not reply directly to this email.`,
             };
 
-            // Sender's email
             const senderMailOptions = {
                 from: `"Doxion" <${process.env.EMAIL_USER}>`,
                 to: email,
@@ -300,7 +369,6 @@ app.post('/api/activitylogs', async (req, res) => {
                     `This is an automated message. Please do not reply directly to this email.`,
             };
 
-            // Send both emails concurrently
             await Promise.all([
                 transporter.sendMail(recipientMailOptions),
                 transporter.sendMail(senderMailOptions),
@@ -329,7 +397,7 @@ app.post('/api/activitylogs', async (req, res) => {
     }
 });
 
-// GET /api/activitylogs - Fetch all activity logs
+// GET /api/activitylogs
 app.get('/api/activitylogs', async (req, res) => {
     try {
         const [rows] = await pool.execute(
@@ -341,7 +409,7 @@ app.get('/api/activitylogs', async (req, res) => {
     }
 });
 
-// PUT /api/activitylogs/:id/receive - Update receive status (kept for reference)
+// PUT /api/activitylogs/:id/receive
 app.put('/api/activitylogs/:id/receive', async (req, res) => {
     const { id } = req.params;
     try {
@@ -362,7 +430,7 @@ app.put('/api/activitylogs/:id/receive', async (req, res) => {
     }
 });
 
-// Updated POST /api/receive - Verify locker number and OTP, update all unclaimed entries
+// POST /api/receive
 app.post('/api/receive', async (req, res) => {
     const { lockerNumber, otp } = req.body;
 
@@ -370,7 +438,6 @@ app.post('/api/receive', async (req, res) => {
     if (!otp || !/^\d{6}$/.test(otp)) return res.status(400).json({ error: 'Valid 6-digit OTP is required' });
 
     try {
-        // Step 1: Check if the OTP matches any unclaimed entry for the locker number
         const [matchingRows] = await pool.execute(
             'SELECT id FROM activitylogs WHERE lockerNumber = ? AND otp = ? AND date_received IS NULL LIMIT 1',
             [lockerNumber, otp]
@@ -380,7 +447,6 @@ app.post('/api/receive', async (req, res) => {
             return res.status(401).json({ error: 'Invalid locker number or OTP.' });
         }
 
-        // Step 2: Update all unclaimed entries for this locker number
         const [updateResult] = await pool.execute(
             'UPDATE activitylogs SET date_received = NOW() WHERE lockerNumber = ? AND date_received IS NULL',
             [lockerNumber]
@@ -390,13 +456,11 @@ app.post('/api/receive', async (req, res) => {
             throw new Error('No unclaimed documents to update');
         }
 
-        // Step 3: Fetch all updated rows to notify senders
         const [updatedRows] = await pool.execute(
             'SELECT id, email, recipientEmail, note, lockerNumber FROM activitylogs WHERE lockerNumber = ? AND date_received IS NOT NULL AND DATE(date_received) = DATE(NOW())',
             [lockerNumber]
         );
 
-        // Step 4: Notify all senders
         const formattedDateTime = new Date().toLocaleString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -439,7 +503,6 @@ app.post('/api/receive', async (req, res) => {
 app.post('/api/admin/set', async (req, res) => {
     const { email, pin } = req.body;
 
-    // Input validation
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
         return res.status(400).json({ error: 'Valid email is required' });
     }
@@ -448,14 +511,12 @@ app.post('/api/admin/set', async (req, res) => {
     }
 
     try {
-        // Use the existing pool instead of creating a new connection
         const [existing] = await pool.execute(
             'SELECT id FROM users WHERE email = ?',
             [email]
         );
 
         if (existing.length > 0) {
-            // Update existing admin
             const [result] = await pool.execute(
                 'UPDATE users SET pin = ?, updated_at = NOW() WHERE email = ?',
                 [pin, email]
@@ -464,7 +525,6 @@ app.post('/api/admin/set', async (req, res) => {
                 throw new Error('Update failed');
             }
         } else {
-            // Insert new admin with a unique ID
             const id = uid.getUniqueID().toString();
             const [result] = await pool.execute(
                 'INSERT INTO users (id, email, pin, created_at) VALUES (?, ?, ?, NOW())',
@@ -480,6 +540,7 @@ app.post('/api/admin/set', async (req, res) => {
         handleDbError(res, error);
     }
 });
+
 
 // Root endpoint
 app.get('/', (req, res) => {

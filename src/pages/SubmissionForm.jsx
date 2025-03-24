@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Lottie from 'react-lottie';
-import loadingAnimationData from '../assets/LoadingAnimation.json'; // Adjust path as needed
+import loadingAnimationData from '../assets/LoadingAnimation.json';
 import Input from '../pages/components/Input';
 import Button from '../pages/components/Button';
 import SelectRecipient from './SelectRecipient';
 import SelectLocker from './SelectLocker';
 import { validateEmail, validateRequired, validateLockerNumber } from '../utils/validators';
 
-// SVG Icons (Extracted as separate components could be further optimized into a separate file)
+// SVG Icons (unchanged)
 const SendMailIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -78,13 +78,13 @@ const FailureIcon = () => (
   </svg>
 );
 
-// Randomized success messages with different emotions
+// Randomized success messages (unchanged)
 const getRandomSuccessMessage = (lockerNumber) => {
   const messages = [
     `You can now put your document in locker ${lockerNumber}! I hope the recipient doesn't get angry after reading it... 😨`,
     `You can now put your document in locker ${lockerNumber}! Wishing the recipient doesn’t feel sad after reading it... 😢`,
     `You can now put your document in locker ${lockerNumber}! I think the recipient will be surprised after reading it 😉`,
-    `You can now put your document in locker ${lockerNumber}! I think the recipient will laughs out loud reading it 😂`,
+    `You can now put your document in locker ${lockerNumber}! I think the recipient will laugh out loud reading it 😂`,
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 };
@@ -106,7 +106,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
   const [submissionStatus, setSubmissionStatus] = useState('idle'); // 'idle', 'loading', 'success', 'failure'
   const [submissionError, setSubmissionError] = useState('');
 
-  // Memoized callbacks to prevent unnecessary re-renders
   const handleChange = useCallback((field) => (e) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
     setErrors((prev) => ({ ...prev, [field]: '' }));
@@ -142,11 +141,42 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     return Object.values(newErrors).every((error) => !error);
   };
 
+  const triggerLockerAndLed = async (ipAddress, lock, led) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/trigger-esp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip_address: ipAddress, lock, led }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to trigger ESP at ${ipAddress}`);
+      }
+
+      console.log(`Successfully triggered ${lock} and set ${led} to HIGH at ${ipAddress}`);
+    } catch (error) {
+      console.error('Error triggering locker/LED:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setSubmissionStatus('loading');
     try {
+      // Step 1: Fetch locker details
+      const lockerResponse = await fetch('http://localhost:5000/api/lockers');
+      if (!lockerResponse.ok) throw new Error('Failed to fetch lockers');
+      const lockers = await lockerResponse.json();
+      
+      const selectedLocker = lockers.find((locker) => locker.number === formData.lockerNumber);
+      if (!selectedLocker) {
+        throw new Error(`Locker ${formData.lockerNumber} not found`);
+      }
+
+      // Step 2: Submit activity log
       const submissionData = {
         email: initialData.email || '',
         recipientEmail: formData.recipientEmail,
@@ -155,29 +185,37 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         date_received: null,
       };
 
-      const response = await fetch('http://localhost:5000/api/activitylogs', {
+      const activityResponse = await fetch('http://localhost:5000/api/activitylogs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData),
       });
 
-      if (response.ok) {
-        const savedData = await response.json();
-        setSubmissionStatus('success');
-        setTimeout(() => onNext({ ...formData, activity_log_id: savedData.id }), 10000);
-      } else {
-        const errorData = await response.json();
-        setSubmissionStatus('failure');
-        setSubmissionError(errorData.error || 'Failed to submit');
+      if (!activityResponse.ok) {
+        const errorData = await activityResponse.json();
+        throw new Error(errorData.error || 'Failed to submit activity log');
       }
+
+      const savedData = await activityResponse.json();
+
+      // Step 3: Trigger locker and LED
+      const { ip_address, locks, leds } = selectedLocker;
+      if (ip_address && locks && leds) {
+        await triggerLockerAndLed(ip_address, locks, leds);
+      } else {
+        console.warn('Locker missing ip_address, locks, or leds; skipping trigger');
+      }
+
+      // Step 4: Mark as successful
+      setSubmissionStatus('success');
+      setTimeout(() => onNext({ ...formData, activity_log_id: savedData.id }), 10000);
     } catch (error) {
       console.error('Error submitting form:', error);
       setSubmissionStatus('failure');
-      setSubmissionError('Network error occurred');
+      setSubmissionError(error.message || 'Network error occurred');
     }
   };
 
-  // Consolidated styles
   const styles = `
     .input-wrapper {
       display: flex;
@@ -287,14 +325,13 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     }
   `;
 
-  // Render logic
   if (submissionStatus === 'loading') {
     return (
       <div className="status-container loading">
         <style>{styles}</style>
         <LoadingIcon />
         <h2>Processing Submission</h2>
-        <p>Organizing your documents...</p>
+        <p>Organizing your documents and triggering locker...</p>
       </div>
     );
   }
