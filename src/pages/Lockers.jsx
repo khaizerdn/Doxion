@@ -111,7 +111,6 @@ function Lockers() {
   const [formData, setFormData] = useState({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
   const [errors, setErrors] = useState({ number: '', device: '' });
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
