@@ -264,7 +264,7 @@ const AdminSettings = () => {
                     <p>{getRandomSuccessMessage(formData.email)}</p>
                 </div>
             ) : (
-                <div className="main-container">
+                <div className="main-container-two">
                     <div className="content-wrapper">
                         <div className="header-section">
                             <BackButton onClick={handleBack} />

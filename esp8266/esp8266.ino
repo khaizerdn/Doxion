@@ -274,7 +274,7 @@ void setup() {
     // Lock routes
     server.on("/LockA", []() {
         digitalWrite(LOCK_PIN_A, HIGH);
-        delay(500);
+        delay(1000);
         digitalWrite(LOCK_PIN_A, LOW);
         lockStateA = LOW;
         handleRoot();
@@ -282,7 +282,7 @@ void setup() {
 
     server.on("/LockB", []() {
         digitalWrite(LOCK_PIN_B, HIGH);
-        delay(500);
+        delay(1000);
         digitalWrite(LOCK_PIN_B, LOW);
         lockStateB = LOW;
         handleRoot();
@@ -290,7 +290,7 @@ void setup() {
 
     server.on("/LockC", []() {
         digitalWrite(LOCK_PIN_C, HIGH);
-        delay(500);
+        delay(1000);
         digitalWrite(LOCK_PIN_C, LOW);
         lockStateC = LOW;
         handleRoot();
@@ -298,7 +298,7 @@ void setup() {
 
     server.on("/LockD", []() {
         digitalWrite(LOCK_PIN_D, HIGH);
-        delay(500);
+        delay(1000);
         digitalWrite(LOCK_PIN_D, LOW);
         lockStateD = LOW;
         handleRoot();

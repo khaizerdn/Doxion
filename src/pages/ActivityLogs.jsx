@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import BackButton from './components/BackButton';
+import Input from './components/Input';
 
 // Utility function to format date without seconds
 const formatDateTime = (dateString) => {
@@ -15,6 +16,7 @@ const formatDateTime = (dateString) => {
 
 function ActivityLogs() {
   const [logs, setLogs] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLog, setSelectedLog] = useState(null);
@@ -43,15 +45,25 @@ function ActivityLogs() {
     }
   };
 
+  // Filter logs based on search term (case-insensitive) for email, recipientEmail, and date
+  const filteredLogs = logs.filter((log) => {
+    const searchLower = searchTerm.toLowerCase();
+    const emailMatch = (log.email || '').toLowerCase().includes(searchLower);
+    const recipientEmailMatch = (log.recipientEmail || '').toLowerCase().includes(searchLower);
+    const dateString = formatDateTime(log.date_received || log.created_at).toLowerCase();
+    const dateMatch = dateString.includes(searchLower);
+    return emailMatch || recipientEmailMatch || dateMatch;
+  });
+
   const handleLogClick = (log) => setSelectedLog(log);
   const closeOverview = () => setSelectedLog(null);
   const isReceived = (log) => !!log.date_received;
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   const styles = `
-    .main-container {
-      display: flex;
-      justify-content: center;
-    }
     .content-wrapper {
       width: 100%;
     }
@@ -59,10 +71,11 @@ function ActivityLogs() {
       width: 100%;
     }
     .header-section {
+       display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 50px; height: 100px; 
+    }
+    .title-container {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      margin-bottom: 20px;
       gap: 16px;
     }
     .log-list {
@@ -177,6 +190,17 @@ function ActivityLogs() {
     .overview-close:hover {
       color: #333;
     }
+    .search-bar { 
+      width: 400px; 
+      height: 100px; 
+    }
+    /* Override Input component styles for search bar */
+    .search-bar.input-field {
+      height: 100px;
+      width: 400px;
+      padding: 10px 20px; /* Adjust padding for better text alignment */
+      font-size: 1.5rem; /* Adjust font size to fit the new height */
+    }
   `;
 
   if (loading) return <div>Loading activity logs...</div>;
@@ -185,18 +209,26 @@ function ActivityLogs() {
   return (
     <>
       <style>{styles}</style>
-      <div className="main-container">
+      <div className="main-container-two">
         <div className="content-wrapper">
           <div className="logs-container">
             <div className="header-section">
-              <BackButton onClick={() => window.history.back()} />
-              <h2 style={{ margin: 0 }}>Activity Logs</h2>
+              <div className="title-container">
+                <BackButton onClick={() => window.history.back()} />
+                <h2 style={{ margin: 0 }}>Activity Logs</h2>
+              </div>
+              <Input
+                placeholder="Search by email or date..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="search-bar"
+              />
             </div>
-            {logs.length === 0 ? (
+            {filteredLogs.length === 0 ? (
               <p>No activity logs available.</p>
             ) : (
               <ul className="log-list">
-                {logs.map((log) => (
+                {filteredLogs.map((log) => (
                   <li
                     key={log.id}
                     className="log-item"

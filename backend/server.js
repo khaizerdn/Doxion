@@ -23,10 +23,10 @@ const uid = new Snowflake();
 
 // MySQL connection pool
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || '127.0.0.1',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'your_database',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     connectionLimit: 10,
 });
 
@@ -182,7 +182,9 @@ app.post('/api/lockers', async (req, res) => {
 // Get All Lockers
 app.get('/api/lockers', async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT id, number, device_name, ip_address, locks, leds, created_at FROM lockers');
+        const [rows] = await pool.execute(
+            'SELECT id, number, device_name, ip_address, locks, leds, created_at FROM lockers ORDER BY created_at DESC'
+        );
         res.json(rows);
     } catch (error) {
         handleDbError(res, error);
@@ -253,7 +255,9 @@ app.post('/api/recipients', async (req, res) => {
 // Get All Recipients
 app.get('/api/recipients', async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT id, email, name, title, image FROM recipients');
+        const [rows] = await pool.execute(
+            'SELECT id, email, name, title, image, created_at FROM recipients ORDER BY created_at DESC'
+        );
         res.json(rows);
     } catch (error) {
         handleDbError(res, error);

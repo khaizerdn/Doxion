@@ -54,7 +54,7 @@ const LockerItem = ({ item, onEdit }) => {
         </svg>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', padding: '20px', gap: '12px' }}>
-        <span style={{ fontWeight: 'bold', fontSize: '2rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>Locker {item.number}</span>
+        <span style={{ fontWeight: 'bold', fontSize: '2rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>Locker Name: {item.number}</span>
         <span style={{ fontSize: '1.625rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>
           {item.locks ? `${item.locks.replace('Lock', 'Lock ')} - ${item.ip_address || 'No IP'}` : 'No ESP Assigned'}
         </span>
@@ -89,7 +89,7 @@ const EspDeviceItem = ({ item, onSelect }) => {
     >
       <div style={{ width: 'var(--global-input-height)', height: 'var(--global-input-height)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={{ width: '50%', height: '50%', fill: 'var(--elevation-2)' }}>
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8 8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
         </svg>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', padding: '20px', gap: '12px' }}>
@@ -105,6 +105,7 @@ const EspDeviceItem = ({ item, onSelect }) => {
 
 function Lockers() {
   const [lockers, setLockers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(''); // State for search term
   const [espDevices, setEspDevices] = useState([]);
   const [view, setView] = useState('lockers'); // 'lockers', 'form', or 'esp'
   const [formData, setFormData] = useState({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
@@ -123,7 +124,7 @@ function Lockers() {
       const response = await fetch('http://localhost:5000/api/lockers');
       if (!response.ok) throw new Error('Failed to fetch lockers');
       const data = await response.json();
-      setLockers(data);
+      setLockers(data); // Data is already sorted by created_at DESC from the backend
     } catch (error) {
       console.error('Error fetching lockers:', error);
     }
@@ -140,9 +141,15 @@ function Lockers() {
     }
   };
 
+  // Filter lockers based on search term (case-insensitive)
+  const filteredLockers = lockers.filter((locker) =>
+    locker.number.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Ensure the "Add Locker" button stays at the top, followed by filtered lockers
   const listItems = [
     { id: 'add', name: 'Add Locker', isAdd: true },
-    ...lockers.map((locker) => ({ ...locker, isAdd: false })),
+    ...filteredLockers.map((locker) => ({ ...locker, isAdd: false })),
   ];
 
   const handleEdit = (item) => {
@@ -166,6 +173,10 @@ function Lockers() {
     setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   const validateForm = () => {
     const newErrors = {
       number: validateRequired(formData.number, 'Locker Number').error,
@@ -176,7 +187,7 @@ function Lockers() {
     if (formData.device_name && formData.ip_address && formData.locks) {
       const isDuplicate = lockers.some(
         (locker) =>
-          locker.id !== formData.id && // Exclude the current locker being edited
+          locker.id !== formData.id &&
           locker.device_name === formData.device_name &&
           locker.ip_address === formData.ip_address &&
           locker.locks === formData.locks
@@ -209,12 +220,7 @@ function Lockers() {
         body: JSON.stringify(body),
       });
       if (response.ok) {
-        const updatedLocker = await response.json();
-        if (formData.id) {
-          setLockers((prev) => prev.map((locker) => (locker.id === formData.id ? updatedLocker : locker)));
-        } else {
-          setLockers((prev) => [...prev, updatedLocker]);
-        }
+        await fetchLockers(); // Refresh the list to maintain sort order
         setFormData({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
         setView('lockers');
       } else {
@@ -234,7 +240,7 @@ function Lockers() {
     try {
       const response = await fetch(`http://localhost:5000/api/lockers/${formData.id}`, { method: 'DELETE' });
       if (response.ok) {
-        setLockers((prev) => prev.filter((locker) => locker.id !== formData.id));
+        await fetchLockers(); // Refresh the list to maintain sort order
         setFormData({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
         setView('lockers');
       } else {
@@ -305,25 +311,48 @@ function Lockers() {
       font-size: 0.875rem;
       margin-top: 5px;
     }
+    .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 50px; height: 100px; }
+    .title-container { display: flex; align-items: center; gap: 16px; }
+    .search-bar { 
+      width: 400px; 
+      height: 100px; 
+    }
+    /* Override Input component styles for search bar */
+    .search-bar.input-field {
+      height: 100px;
+      width: 400px;
+      padding: 10px 20px; /* Adjust padding for better text alignment */
+      font-size: 1.5rem; /* Adjust font size to fit the new height */
+    }
   `;
 
   return (
-    <div className="main-container">
+    <div className="main-container-two">
       <div className="content-wrapper">
         <style>{styles}</style>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '16px' }}>
-          <BackButton
-            onClick={
-              view === 'form'
-                ? handleCancel
-                : view === 'esp'
-                ? () => setView('form')
-                : () => window.history.back()
-            }
-          />
-          <h2 style={{ margin: 0 }}>
-            {view === 'lockers' ? 'Lockers' : view === 'form' ? (formData.id ? 'Edit Locker' : 'Add Locker') : 'ESP Devices'}
-          </h2>
+        <div className="header-container">
+          <div className="title-container">
+            <BackButton
+              onClick={
+                view === 'form'
+                  ? handleCancel
+                  : view === 'esp'
+                  ? () => setView('form')
+                  : () => window.history.back()
+              }
+            />
+            <h2 style={{ margin: 0 }}>
+              {view === 'lockers' ? 'Lockers' : view === 'form' ? (formData.id ? 'Edit Locker' : 'Add Locker') : 'ESP Devices'}
+            </h2>
+          </div>
+          {view === 'lockers' && (
+            <Input
+              placeholder="Search here..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="search-bar"
+            />
+          )}
         </div>
         {view === 'form' ? (
           <div style={{ width: '100%' }}>

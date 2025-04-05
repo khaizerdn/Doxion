@@ -4,6 +4,7 @@ import Button from './components/Button';
 import Input from './components/Input';
 import { validateEmail, validateRequired } from '../utils/validators';
 
+// RecipientItem component remains unchanged for brevity
 const RecipientItem = ({ item, onEdit }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -16,7 +17,7 @@ const RecipientItem = ({ item, onEdit }) => {
         <li style={{ width: '100%', margin: '10px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Button
             type="primary"
-            onClick={() => onEdit(null)} // Null indicates adding a new recipient
+            onClick={() => onEdit(null)}
             width="100%"
             height="100px"
             fontSize="2rem"
@@ -80,6 +81,7 @@ const RecipientItem = ({ item, onEdit }) => {
 
 function Recipient() {
   const [recipients, setRecipients] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ id: null, name: '', email: '', title: '', image: '' });
   const [errors, setErrors] = useState({ name: '', email: '', title: '', image: '' });
@@ -93,6 +95,7 @@ function Recipient() {
   const fetchRecipients = async () => {
     try {
       const response = await fetch('http://localhost:5000/api/recipients');
+      if (!response.ok) throw new Error('Failed to fetch recipients');
       const data = await response.json();
       setRecipients(data);
     } catch (error) {
@@ -100,9 +103,13 @@ function Recipient() {
     }
   };
 
+  const filteredRecipients = recipients.filter((recipient) =>
+    recipient.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const listItems = [
     { id: 'add', name: 'Add Recipient', isAdd: true },
-    ...recipients.map((prof) => ({ ...prof, isAdd: false })),
+    ...filteredRecipients.map((prof) => ({ ...prof, isAdd: false })),
   ];
 
   const handleEdit = (item) => {
@@ -117,6 +124,10 @@ function Recipient() {
   const handleChange = (field) => (e) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
     setErrors((prev) => ({ ...prev, [field]: '' }));
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
 
   const validateForm = () => {
@@ -142,12 +153,7 @@ function Recipient() {
         body: JSON.stringify({ email: formData.email, name: formData.name, title: formData.title, image: formData.image || null }),
       });
       if (response.ok) {
-        const updatedRecipient = await response.json();
-        if (formData.id) {
-          setRecipients((prev) => prev.map((rec) => (rec.id === formData.id ? updatedRecipient : rec)));
-        } else {
-          setRecipients((prev) => [...prev, updatedRecipient]);
-        }
+        await fetchRecipients();
         setFormData({ id: null, name: '', email: '', title: '', image: '' });
         setShowForm(false);
       } else {
@@ -167,7 +173,7 @@ function Recipient() {
     try {
       const response = await fetch(`http://localhost:5000/api/recipients/${formData.id}`, { method: 'DELETE' });
       if (response.ok) {
-        setRecipients((prev) => prev.filter((rec) => rec.id !== formData.id));
+        await fetchRecipients();
         setFormData({ id: null, name: '', email: '', title: '', image: '' });
         setShowForm(false);
       } else {
@@ -187,17 +193,40 @@ function Recipient() {
 
   const styles = `
     .action-button { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+    .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 50px; height: 100px; }
+    .title-container { display: flex; align-items: center; gap: 16px; }
+    .search-bar { 
+      width: 400px; 
+      height: 100px; 
+    }
+    /* Override Input component styles for search bar */
+    .search-bar.input-field {
+      height: 100px;
+      width: 400px;
+      padding: 10px 20px; /* Adjust padding for better text alignment */
+      font-size: 1.5rem; /* Adjust font size to fit the new height */
+    }
   `;
 
   return (
-    <div className="main-container">
+    <div className="main-container-two">
       <div className="content-wrapper">
         <style>{styles}</style>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '16px' }}>
-          <BackButton onClick={showForm ? handleCancel : () => window.history.back()} />
-          <h2 style={{ margin: 0 }}>
-            {!showForm ? 'Recipients' : (formData.id ? 'Edit Recipient' : 'Add Recipient')}
-          </h2>
+        <div className="header-container">
+          <div className="title-container">
+            <BackButton onClick={showForm ? handleCancel : () => window.history.back()} />
+            <h2 style={{ margin: 0 }}>
+              {!showForm ? 'Recipients' : (formData.id ? 'Edit Recipient' : 'Add Recipient')}
+            </h2>
+          </div>
+          {!showForm && (
+            <Input
+              placeholder="Search here..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="search-bar"
+            />
+          )}
         </div>
         {showForm ? (
           <div style={{ width: '100%' }}>

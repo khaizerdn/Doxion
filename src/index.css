@@ -116,6 +116,16 @@ p {
   background-color: var(--elevation-0);
 }
 
+.main-container-two {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh; /* Takes at least full viewport height */
+  width: 100%;
+  padding: 10px;
+  background-color: var(--elevation-0);
+}
+
 .content-wrapper {
   display: flex;
   flex-direction: column;
