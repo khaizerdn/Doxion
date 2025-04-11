@@ -16,8 +16,6 @@ Members:
 - Mark Lawrence P. Lindo – Hardware Engineer
 - Vhane Lexter Alcasura – Product Development Engineer
 
-Note: While each member had a primary area of focus, all contributed across various aspects of the project to ensure the system's optimal functionality and overall success.
-
 ![App Screenshot](/Doxion.gif)
 
 Full Documentation: Soon!
