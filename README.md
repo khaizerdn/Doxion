@@ -11,12 +11,11 @@
 
 The document submission system of Cavite State University with an interactive React-based web application integrated with kiosk interfaces and scalable smart lockers powered by Raspberry Pi and ESP8266, significantly improving operational efficiency and user experience for students and faculty.
 
+### Members
+- Khaizer D. Noguera – Lead Software Engineer
+- Mark Lawrence P. Lindo – Embedded Systems & Hardware Lead
+- Vhane Lexter Alcasura – Physical Systems & Product Designer
+
 Full Documentation: Soon!
 
 ![App Screenshot](/Doxion.gif)
-
-Members:
-- Khaizer D. Noguera – Software Engineer
-- Mark Lawrence P. Lindo – Hardware Engineer
-- Vhane Lexter Alcasura – Product Development Engineer
-
