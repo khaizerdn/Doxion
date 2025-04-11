@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 const configSettings = {
     idleTimeout: 9990000, // 60 seconds in milliseconds for idle timer
     otpTimeout: 120000, // 120 seconds (2 minutes) in milliseconds for OTP timer
-    showTimers: true, // Single flag to show all timers (idle and OTP)
+    showTimers: false, // Single flag to show all timers (idle and OTP)
     fontFamily: 'Inter, sans-serif' // Default font family
 };
 
