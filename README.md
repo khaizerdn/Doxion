@@ -9,7 +9,7 @@
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black)
 
-The document submission system of Cavite State University with an interactive React-based web application integrated with kiosk interfaces and scalable smart lockers powered by Raspberry Pi and ESP8266, significantly improving operational efficiency and user experience for students and faculty.
+A React-based web application for document submission system of Cavite State University, integrated with kiosk interfaces and scalable smart lockers powered by Raspberry Pi and ESP8266, significantly improving operational efficiency and user experience for students and faculty.
 
 Full Documentation: Soon!
 
