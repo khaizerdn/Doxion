@@ -114,34 +114,39 @@ const EnterAdminOTP = ({ onNext, onClose, error }) => {
 
     return (
         <>
-            <h2>Verify OTP</h2>
-            <p>Please enter the OTP sent to the current admin's email.</p>
-            <div className="otp-container">
-                {otp.map((digit, index) => (
-                    <input
-                        key={index}
-                        type="text"
-                        className={`otp-input ${otpError ? 'otp-input-error' : ''}`}
-                        value={digit}
-                        onChange={(e) => handleChange(index, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(index, e)}
-                        maxLength={1}
-                        ref={(el) => (inputRefs.current[index] = el)}
-                        aria-label={`OTP digit ${index + 1}`}
-                    />
-                ))}
-            </div>
-            {otpError && <p className="error-message">{otpError}</p>}
-            <button
+        <div className="main-container">
+        <div className="content-wrapper">
+            <h2>Verification</h2>
+            <p>Please enter the OTP sent to the current admin's email.<button
                 className={`resend-button ${resendCooldown > 0 ? 'disabled' : ''}`}
                 onClick={handleResend}
                 disabled={resendCooldown > 0}
             >
                 {resendCooldown > 0 ? `Resend OTP? (${resendCooldown}s)` : 'Resend OTP?'}
-            </button>
+            </button></p>
+            <div className="otp-container">
+                <div className="otp-input-group">
+                    {otp.map((digit, index) => (
+                        <input
+                            key={index}
+                            type="text"
+                            className={`otp-input ${otpError ? 'otp-input-error' : ''}`}
+                            value={digit}
+                            onChange={(e) => handleChange(index, e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(index, e)}
+                            maxLength={1}
+                            ref={(el) => (inputRefs.current[index] = el)}
+                            aria-label={`OTP digit ${index + 1}`}
+                        />
+                    ))}
+                </div>
+            </div>
+            {otpError && <p className="error-message">{otpError}</p>}
             <div className="action-button">
                 <Button type="secondary" onClick={onClose}>CANCEL</Button>
                 <Button type="primary" onClick={handleSubmit}>VERIFY</Button>
+            </div>
+            </div>
             </div>
         </>
     );
@@ -164,6 +169,17 @@ const AdminSettings = () => {
     useEffect(() => {
         if (step === 'input') {
             inputRefs.current[0]?.focus();
+        }
+    }, [step]);
+
+    useEffect(() => {
+        if (step === 'success') {
+            const timer = setTimeout(() => {
+                setStep('input');
+                setFormData({ email: '', pin: ['', '', '', '', '', ''] });
+                setErrors({ email: '', pin: '', otp: '' });
+            }, 5000); // 5 seconds
+            return () => clearTimeout(timer);
         }
     }, [step]);
 
@@ -336,6 +352,11 @@ const AdminSettings = () => {
             border-radius: var(--global-border-radius); 
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); 
             transition: border-color 0.3s ease; 
+        }
+        .otp-input-group {
+            display: flex;
+            gap: 10px;
+            flex: 1;
         }
         .otp-input:focus { 
             outline: none; 
