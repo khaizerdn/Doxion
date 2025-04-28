@@ -42,27 +42,113 @@ const getRandomSuccessMessage = (email) => {
     return messages[Math.floor(Math.random() * messages.length)];
 };
 
-// Error Boundary Component
-class ErrorBoundary extends React.Component {
-    state = { hasError: false };
+const EnterAdminOTP = ({ onNext, onClose, error }) => {
+    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [otpError, setOtpError] = useState(error || '');
+    const [timeLeft, setTimeLeft] = useState(120); // 2 minutes
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const inputRefs = useRef([]);
 
-    static getDerivedStateFromError() {
-        return { hasError: true };
-    }
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+            setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
 
-    componentDidCatch(error, errorInfo) {
-        console.error('ErrorBoundary caught an error:', error, errorInfo);
-    }
+    useEffect(() => {
+        inputRefs.current[0]?.focus();
+    }, []);
 
-    render() {
-        if (this.state.hasError) {
-            return <div>Something went wrong. Please try again.</div>;
+    const handleChange = (index, value) => {
+        if (!/^[0-9]?$/.test(value)) return;
+        const newOtp = [...otp];
+        newOtp[index] = value;
+        setOtp(newOtp);
+        setOtpError('');
+        if (value && index < 5) inputRefs.current[index + 1].focus();
+    };
+
+    const handleKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0) {
+            inputRefs.current[index - 1].focus();
         }
-        return this.props.children;
-    }
-}
+    };
+
+    const handleSubmit = () => {
+        const enteredOtp = otp.join('');
+        if (enteredOtp.length !== 6 || !/^\d{6}$/.test(enteredOtp)) {
+            setOtpError('Please enter a valid 6-digit OTP');
+            return;
+        }
+        if (timeLeft <= 0) {
+            setOtpError('OTP has expired');
+            return;
+        }
+        onNext({ otp: enteredOtp });
+    };
+
+    const handleResend = async () => {
+        if (resendCooldown > 0) return;
+
+        setResendCooldown(60);
+        setTimeLeft(120);
+        setOtp(['', '', '', '', '', '']);
+        setOtpError('');
+
+        try {
+            const response = await fetch('http://localhost:5000/api/admin/resend-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to resend OTP');
+            }
+        } catch (error) {
+            setOtpError(error.message);
+        }
+    };
+
+    return (
+        <>
+            <h2>Verify OTP</h2>
+            <p>Please enter the OTP sent to the current admin's email.</p>
+            <div className="otp-container">
+                {otp.map((digit, index) => (
+                    <input
+                        key={index}
+                        type="text"
+                        className={`otp-input ${otpError ? 'otp-input-error' : ''}`}
+                        value={digit}
+                        onChange={(e) => handleChange(index, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(index, e)}
+                        maxLength={1}
+                        ref={(el) => (inputRefs.current[index] = el)}
+                        aria-label={`OTP digit ${index + 1}`}
+                    />
+                ))}
+            </div>
+            {otpError && <p className="error-message">{otpError}</p>}
+            <button
+                className={`resend-button ${resendCooldown > 0 ? 'disabled' : ''}`}
+                onClick={handleResend}
+                disabled={resendCooldown > 0}
+            >
+                {resendCooldown > 0 ? `Resend OTP? (${resendCooldown}s)` : 'Resend OTP?'}
+            </button>
+            <div className="action-button">
+                <Button type="secondary" onClick={onClose}>CANCEL</Button>
+                <Button type="primary" onClick={handleSubmit}>VERIFY</Button>
+            </div>
+        </>
+    );
+};
 
 const AdminSettings = () => {
+    const [step, setStep] = useState('input');
     const [formData, setFormData] = useState({
         email: '',
         pin: ['', '', '', '', '', ''],
@@ -70,13 +156,16 @@ const AdminSettings = () => {
     const [errors, setErrors] = useState({
         email: '',
         pin: '',
+        otp: '',
     });
     const [status, setStatus] = useState('idle');
     const inputRefs = useRef([]);
 
     useEffect(() => {
-        inputRefs.current[0]?.focus();
-    }, []);
+        if (step === 'input') {
+            inputRefs.current[0]?.focus();
+        }
+    }, [step]);
 
     const handleEmailChange = useCallback((e) => {
         setFormData((prev) => ({ ...prev, email: e.target.value }));
@@ -121,7 +210,7 @@ const AdminSettings = () => {
                 pin: formData.pin.join(''),
             };
 
-            const response = await fetch('http://localhost:5000/api/admin/set', {
+            const response = await fetch('http://localhost:5000/api/admin/request-set', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(submissionData),
@@ -129,29 +218,55 @@ const AdminSettings = () => {
 
             const data = await response.json();
             if (!response.ok) {
-                setErrors((prev) => ({ ...prev, pin: data.error || 'Failed to save settings' }));
+                setErrors((prev) => ({ ...prev, pin: data.error || 'Failed to request settings change' }));
                 setStatus('idle');
                 return;
             }
 
-            setStatus('success');
-            setTimeout(() => {
-                setStatus('idle');
-                setFormData({ email: '', pin: ['', '', '', '', '', ''] });
-                inputRefs.current[0]?.focus();
-            }, 10000);
+            if (data.otpRequired) {
+                setStep('otp');
+            } else {
+                setStep('success');
+            }
+            setStatus('idle');
         } catch (error) {
-            setErrors((prev) => ({
-                ...prev,
-                pin: error.message || 'An error occurred. Please try again.',
-            }));
+            setErrors((prev) => ({ ...prev, pin: error.message || 'An error occurred. Please try again.' }));
             setStatus('idle');
         }
     }, [formData, validateForm]);
 
-    const handleBack = useCallback(() => {
-        window.history.back();
+    const handleOtpSubmit = useCallback(async (enteredOtp) => {
+        setStatus('loading');
+        try {
+            const response = await fetch('http://localhost:5000/api/admin/verify-set', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ otp: enteredOtp }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                setErrors((prev) => ({ ...prev, otp: data.error || 'Invalid OTP' }));
+                setStatus('idle');
+                return;
+            }
+
+            setStep('success');
+            setStatus('idle');
+        } catch (error) {
+            setErrors((prev) => ({ ...prev, otp: error.message || 'An error occurred. Please try again.' }));
+            setStatus('idle');
+        }
     }, []);
+
+    const handleBack = useCallback(() => {
+        if (step === 'otp') {
+            setStep('input');
+            setErrors((prev) => ({ ...prev, otp: '' }));
+        } else {
+            window.history.back();
+        }
+    }, [step]);
 
     const styles = `
         .input-wrapper {
@@ -202,14 +317,62 @@ const AdminSettings = () => {
             outline: none;
             border-color: ${errors.pin ? 'var(--color-error)' : 'var(--color-primary)'};
         }
+        .otp-container { 
+            display: flex; 
+            gap: 10px;
+            justify-content: space-between; 
+            align-items: center; 
+            width: 100%;
+            height: var(--global-input-height);
+        }
+        .otp-input { 
+            width: 100px; 
+            height: 100px; 
+            text-align: center; 
+            font-size: var(--font-size-3); 
+            color: var(--color-muted-dark); 
+            background-color: var(--elevation-1); 
+            border: 1px solid ${errors.otp ? 'var(--color-error)' : 'var(--elevation-3)'};
+            border-radius: var(--global-border-radius); 
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); 
+            transition: border-color 0.3s ease; 
+        }
+        .otp-input:focus { 
+            outline: none; 
+            border-color: ${errors.otp ? 'var(--color-error)' : 'var(--color-primary)'};
+        }
+        .otp-input-error { 
+            border-color: var(--color-error); 
+        }
+        .resend-button {
+            height: 50px;
+            min-width: 200px;
+            font-size: var(--font-size-5);
+            padding: 8px 16px;
+            color: var(--color-primary-light);
+            background-color: var(--color-accent);
+            border: none;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s ease, background-color 0.3s ease;
+            margin: 10px 0;
+        }
+        .resend-button.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            font-weight: normal;
+        }
+        .resend-button:not(.disabled):hover {
+            opacity: 0.8;
+            background-color: var(--color-accent-hover);
+        }
         .action-button {
             display: flex;
             justify-content: flex-end;
             margin-top: 20px;
             width: 100%;
-        }
-        .action-button button {
-            width: 100%;
+            gap: 10px;
         }
         .status-container {
             width: 100%;
@@ -249,7 +412,7 @@ const AdminSettings = () => {
     `;
 
     return (
-        <ErrorBoundary>
+        <div className="main-container-two">
             <style>{styles}</style>
             {status === 'loading' ? (
                 <div className="status-container">
@@ -257,72 +420,76 @@ const AdminSettings = () => {
                     <h2>Processing Admin Settings</h2>
                     <p>Saving your admin details...</p>
                 </div>
-            ) : status === 'success' ? (
+            ) : step === 'success' ? (
                 <div className="status-container">
                     <SuccessIcon />
                     <h2>Settings Saved</h2>
                     <p>{getRandomSuccessMessage(formData.email)}</p>
                 </div>
+            ) : step === 'otp' ? (
+                <EnterAdminOTP
+                    onNext={(data) => handleOtpSubmit(data.otp)}
+                    onClose={handleBack}
+                    error={errors.otp}
+                />
             ) : (
-                <div className="main-container-two">
-                    <div className="content-wrapper">
-                        <div className="header-section">
-                            <BackButton onClick={handleBack} />
-                            <h2>Set Admin</h2>
-                        </div>
-                        <p style={{ marginBottom: '10px' }}>
-                            Please enter the admin email and 6-digit PIN below.
+                <div className="content-wrapper">
+                    <div className="header-section">
+                        <BackButton onClick={handleBack} />
+                        <h2>Set Admin</h2>
+                    </div>
+                    <p style={{ marginBottom: '10px' }}>
+                        Please enter the admin email and 6-digit PIN below.
+                    </p>
+
+                    <div className="input-wrapper">
+                        <Input
+                            className="input-field"
+                            placeholder="Admin Email"
+                            value={formData.email}
+                            onChange={handleEmailChange}
+                            aria-label="Admin Email"
+                        />
+                    </div>
+                    {errors.email && (
+                        <p className="error-message" aria-live="polite">
+                            {errors.email}
                         </p>
+                    )}
 
-                        <div className="input-wrapper">
-                            <Input
-                                className="input-field"
-                                placeholder="Admin Email"
-                                value={formData.email}
-                                onChange={handleEmailChange}
-                                aria-label="Admin Email"
+                    <div className="pin-container">
+                        {formData.pin.map((digit, index) => (
+                            <input
+                                key={index}
+                                type="text"
+                                className="pin-input"
+                                value={digit}
+                                onChange={(e) => handlePinChange(index, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(index, e)}
+                                maxLength={1}
+                                ref={(el) => (inputRefs.current[index] = el)}
+                                aria-label={`PIN digit ${index + 1}`}
                             />
-                        </div>
-                        {errors.email && (
-                            <p className="error-message" aria-live="polite">
-                                {errors.email}
-                            </p>
-                        )}
+                        ))}
+                    </div>
+                    {errors.pin && (
+                        <p className="error-message" aria-live="polite">
+                            {errors.pin}
+                        </p>
+                    )}
 
-                        <div className="pin-container">
-                            {formData.pin.map((digit, index) => (
-                                <input
-                                    key={index}
-                                    type="text"
-                                    className="pin-input"
-                                    value={digit}
-                                    onChange={(e) => handlePinChange(index, e.target.value)}
-                                    onKeyDown={(e) => handleKeyDown(index, e)}
-                                    maxLength={1}
-                                    ref={(el) => (inputRefs.current[index] = el)}
-                                    aria-label={`PIN digit ${index + 1}`}
-                                />
-                            ))}
-                        </div>
-                        {errors.pin && (
-                            <p className="error-message" aria-live="polite">
-                                {errors.pin}
-                            </p>
-                        )}
-
-                        <div className="action-button">
-                            <Button
-                                type="primary"
-                                onClick={handleSubmit}
-                                disabled={status === 'loading'}
-                            >
-                                CONFIRM
-                            </Button>
-                        </div>
+                    <div className="action-button">
+                        <Button
+                            type="primary"
+                            onClick={handleSubmit}
+                            disabled={status === 'loading'}
+                        >
+                            CONFIRM
+                        </Button>
                     </div>
                 </div>
             )}
-        </ErrorBoundary>
+        </div>
     );
 };
 

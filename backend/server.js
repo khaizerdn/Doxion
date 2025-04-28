@@ -50,6 +50,11 @@ const handleDbError = (res, error) => {
     return res.status(500).json({ error: 'Database error', details: error.message });
 };
 
+// Utility function to generate OTP
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 // API Endpoints
 
 // Generate flake IDs
@@ -132,14 +137,14 @@ app.post('/api/trigger-esp', async (req, res) => {
       console.error('Error triggering ESP:', error);
       res.status(500).json({ error: 'Failed to trigger ESP', details: error.message });
     }
-  });
+});
 
 // Send OTP
 app.post('/api/send-otp', async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = generateOTP();
     const mailOptions = {
         from: `"Doxion" <${process.env.EMAIL_USER}>`,
         to: email,
@@ -302,11 +307,6 @@ app.delete('/api/recipients/:id', async (req, res) => {
         handleDbError(res, error);
     }
 });
-
-// Utility function to generate OTP
-const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-};
 
 // POST /api/activitylogs
 app.post('/api/activitylogs', async (req, res) => {
@@ -504,9 +504,9 @@ app.post('/api/receive', async (req, res) => {
     }
 });
 
-app.post('/api/admin/set', async (req, res) => {
+// Request to set new admin
+app.post('/api/admin/request-set', async (req, res) => {
     const { email, pin } = req.body;
-
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
         return res.status(400).json({ error: 'Valid email is required' });
     }
@@ -515,36 +515,95 @@ app.post('/api/admin/set', async (req, res) => {
     }
 
     try {
-        const [existing] = await pool.execute(
-            'SELECT id FROM users WHERE email = ?',
-            [email]
-        );
-
-        if (existing.length > 0) {
-            const [result] = await pool.execute(
-                'UPDATE users SET pin = ?, updated_at = NOW() WHERE email = ?',
-                [pin, email]
-            );
-            if (result.affectedRows === 0) {
-                throw new Error('Update failed');
-            }
-        } else {
+        const [existing] = await pool.execute('SELECT * FROM users LIMIT 1');
+        if (existing.length === 0) {
             const id = uid.getUniqueID().toString();
-            const [result] = await pool.execute(
+            await pool.execute(
                 'INSERT INTO users (id, email, pin, created_at) VALUES (?, ?, ?, NOW())',
                 [id, email, pin]
             );
-            if (result.affectedRows === 0) {
-                throw new Error('Insert failed');
-            }
-        }
+            return res.json({ success: true });
+        } else {
+            const currentEmail = existing[0].email;
+            const otp = generateOTP();
+            const otpExpires = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
+            await pool.execute(
+                'UPDATE users SET pending_email = ?, pending_pin = ?, otp = ?, otp_expires = ? WHERE id = ?',
+                [email, pin, otp, otpExpires, existing[0].id]
+            );
 
-        res.status(200).json({ message: 'Admin settings updated successfully' });
+            const mailOptions = {
+                from: `"Doxion" <${process.env.EMAIL_USER}>`,
+                to: currentEmail,
+                subject: 'Verify Admin Change',
+                text: `A request to change the admin email and PIN has been made. Please use the following OTP to confirm: ${otp}. This OTP will expire in 2 minutes.`,
+            };
+            await transporter.sendMail(mailOptions);
+
+            return res.json({ otpRequired: true });
+        }
     } catch (error) {
         handleDbError(res, error);
     }
 });
 
+// Verify OTP and set new admin
+app.post('/api/admin/verify-set', async (req, res) => {
+    const { otp } = req.body;
+    if (!otp || !/^\d{6}$/.test(otp)) {
+        return res.status(400).json({ error: 'Valid 6-digit OTP is required' });
+    }
+
+    try {
+        const [existing] = await pool.execute(
+            'SELECT * FROM users WHERE otp = ? AND otp_expires > NOW() LIMIT 1',
+            [otp]
+        );
+        if (existing.length === 0) {
+            return res.status(401).json({ error: 'Invalid or expired OTP' });
+        }
+
+        const user = existing[0];
+        await pool.execute(
+            'UPDATE users SET email = ?, pin = ?, pending_email = NULL, pending_pin = NULL, otp = NULL, otp_expires = NULL, updated_at = NOW() WHERE id = ?',
+            [user.pending_email, user.pending_pin, user.id]
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        handleDbError(res, error);
+    }
+});
+
+// Resend OTP for admin change
+app.post('/api/admin/resend-otp', async (req, res) => {
+    try {
+        const [existing] = await pool.execute('SELECT * FROM users WHERE pending_email IS NOT NULL LIMIT 1');
+        if (existing.length === 0) {
+            return res.status(400).json({ error: 'No pending admin change request' });
+        }
+
+        const currentEmail = existing[0].email;
+        const otp = generateOTP();
+        const otpExpires = new Date(Date.now() + 2 * 60 * 1000);
+        await pool.execute(
+            'UPDATE users SET otp = ?, otp_expires = ? WHERE id = ?',
+            [otp, otpExpires, existing[0].id]
+        );
+
+        const mailOptions = {
+            from: `"Doxion" <${process.env.EMAIL_USER}>`,
+            to: currentEmail,
+            subject: 'Verify Admin Change',
+            text: `A new OTP for admin change verification: ${otp}. This OTP will expire in 2 minutes.`,
+        };
+        await transporter.sendMail(mailOptions);
+
+        res.json({ message: 'OTP resent successfully' });
+    } catch (error) {
+        handleDbError(res, error);
+    }
+});
 
 // Root endpoint
 app.get('/', (req, res) => {
