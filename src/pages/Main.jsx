@@ -1,12 +1,28 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from './components/Button';
 import SubmissionSteps from '../utils/SubmissionSteps';
 import ReceiveForm from '../pages/ReceiveForm';
+import EnterAdminPin from './EnterAdminPin';
 
 function Main() {
   const [showSubmissionSteps, setShowSubmissionSteps] = useState(false);
   const [showReceiveForm, setShowReceiveForm] = useState(false);
+  const [showAdminPin, setShowAdminPin] = useState(false);
+  const navigate = useNavigate();
+
+  const handleAdminButtonClick = () => {
+    setShowAdminPin(true);
+};
+
+const handlePinSuccess = () => {
+    setShowAdminPin(false);
+    navigate('/adminpanel');
+};
+
+const handlePinClose = () => {
+    setShowAdminPin(false);
+};
 
   const mainStyles = `
     .terms-link {
@@ -54,19 +70,22 @@ function Main() {
   return (
     <>
       <style>{mainStyles}</style>
-      {showSubmissionSteps ? (
-        <SubmissionSteps onClose={() => setShowSubmissionSteps(false)} />
+      {showAdminPin ? (
+          <EnterAdminPin onSuccess={handlePinSuccess} onClose={handlePinClose} />
+      ) : showSubmissionSteps ? (
+          <SubmissionSteps onClose={() => setShowSubmissionSteps(false)} />
       ) : showReceiveForm ? (
-        <ReceiveForm onClose={() => setShowReceiveForm(false)} />
+          <ReceiveForm onClose={() => setShowReceiveForm(false)} />
       ) : (
         <div className="main-container">
           <div className="content-wrapper">
             <div className="header-container">
               <h1 className="header-title">DOXION<h2 style={{ fontSize: '30px', marginBottom: 15, marginTop: 15, color: 'var(--color-accent)' }}>We find ways to pass documents シ</h2></h1>
-              <Link to="/adminpanel" className="admin-button-link">
+              <div className="admin-button-link">
                 <Button
                   type="primary"
                   className="admin-button"
+                  onClick={handleAdminButtonClick}
                   aria-label="Go to admin panel"
                 >
                   <svg
@@ -77,7 +96,7 @@ function Main() {
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
                   </svg>
                 </Button>
-              </Link>
+              </div>
             </div>
             
             <Button

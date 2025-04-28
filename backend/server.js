@@ -102,7 +102,7 @@ app.post('/api/espdetected', async (req, res) => {
     }
 });
 
-// Get all ESP detected logs (unchanged)
+// Get all ESP detected logs
 app.get('/api/espdetected', async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT id, device_name, ip_address, locks, leds, detected_at FROM espdetected_logs');
@@ -121,14 +121,12 @@ app.post('/api/trigger-esp', async (req, res) => {
     }
   
     try {
-      const lockUrl = `http://${ip_address}/${lock}`; // e.g., "http://192.168.1.191/LockA"
+      const lockUrl = `http://${ip_address}/${lock}`;
       const ledUrl = ledState === 'off' ? `http://${ip_address}/${led}/off` : `http://${ip_address}/${led}`;
   
-      // Trigger locker
       const lockResponse = await fetch(lockUrl, { method: 'GET' });
       if (!lockResponse.ok) throw new Error(`Failed to trigger locker at ${lockUrl}`);
   
-      // Trigger LED
       const ledResponse = await fetch(ledUrl, { method: 'GET' });
       if (!ledResponse.ok) throw new Error(`Failed to trigger LED at ${ledUrl}`);
   
@@ -600,6 +598,28 @@ app.post('/api/admin/resend-otp', async (req, res) => {
         await transporter.sendMail(mailOptions);
 
         res.json({ message: 'OTP resent successfully' });
+    } catch (error) {
+        handleDbError(res, error);
+    }
+});
+
+// Verify admin PIN
+app.post('/api/admin/verify-pin', async (req, res) => {
+    const { pin } = req.body;
+    if (!pin || !/^\d{6}$/.test(pin)) {
+        return res.status(400).json({ error: 'Valid 6-digit PIN is required' });
+    }
+
+    try {
+        const [existing] = await pool.execute(
+            'SELECT * FROM users WHERE pin = ? LIMIT 1',
+            [pin]
+        );
+        if (existing.length === 0) {
+            return res.status(401).json({ error: 'Invalid PIN' });
+        }
+
+        res.json({ success: true });
     } catch (error) {
         handleDbError(res, error);
     }
