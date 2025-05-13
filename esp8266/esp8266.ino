@@ -6,16 +6,16 @@
 #include <WiFiClient.h>
 
 // Lock pin definitions
-const int LOCK_PIN_A = 14;  // GPIO14 - LockA
-const int LOCK_PIN_B = 12;  // GPIO12 - LockB
-const int LOCK_PIN_C = 13;  // GPIO13 - LockC
-const int LOCK_PIN_D = 15;  // GPIO15 - LockD
+const int LOCK_PIN_A = 14;  // D5 - LockA
+const int LOCK_PIN_B = 12;  // D6 - LockB
+const int LOCK_PIN_C = 13;  // D7 - LockC
+const int LOCK_PIN_D = 15;  // D8 - LockD
 
 // LED pin definitions
-const int LED_PIN_A = 4;   // GPIO4  - LedA
-const int LED_PIN_B = 5;   // GPIO5  - LedB
-const int LED_PIN_C = 0;   // GPIO0  - LedC
-const int LED_PIN_D = 2;   // GPIO2  - LedD
+const int LED_PIN_A = 4;   // D2  - LedA
+const int LED_PIN_B = 5;   // D1  - LedB
+const int LED_PIN_C = 0;   // D3  - LedC
+const int LED_PIN_D = 2;   // D4  - LedD
 
 // State tracking
 volatile int lockStateA = LOW;
