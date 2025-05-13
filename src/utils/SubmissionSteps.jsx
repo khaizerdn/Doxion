@@ -1,5 +1,5 @@
 // SubmissionSteps.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConfirmEmail from '../pages/ConfirmEmail';
 import EnterOTP from '../pages/EnterOTP';
 import SubmissionForm from '../pages/SubmissionForm';
@@ -30,8 +30,31 @@ const SubmissionSteps = ({ onClose }) => {
     }
   };
 
+  // 🧠 Detect keyboard open based on focused input
+  useEffect(() => {
+    const mainContainer = document.querySelector('.main-container');
+
+    const handleFocus = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        mainContainer.style.paddingBottom = '300px'; // match keyboard height
+      }
+    };
+
+    const handleBlur = () => {
+      mainContainer.style.paddingBottom = '0px';
+    };
+
+    document.addEventListener('focusin', handleFocus);
+    document.addEventListener('focusout', handleBlur);
+
+    return () => {
+      document.removeEventListener('focusin', handleFocus);
+      document.removeEventListener('focusout', handleBlur);
+    };
+  }, []);
+
   return (
-    <div className="main-container">
+    <div className="main-container" style={{ overflowY: 'auto', height: '100%' }}>
       <div className="content-wrapper">
         {currentStep !== 3 && (
           <p style={{ fontSize: 'var(--font-size-5)' }}>

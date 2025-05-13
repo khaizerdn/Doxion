@@ -114,6 +114,7 @@ p {
   width: 100%;
   padding: 10px;
   background-color: var(--elevation-0);
+  overflow-y: auto;
 }
 
 .main-container-two {
@@ -154,46 +155,8 @@ p {
   margin-bottom: 10px;
 }
 
-.keyboard {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 5px;
-  max-width: 100%;
-  padding: 10px;
-  background-color: #f0f0f0;
-  border-radius: 8px;
-}
-
-.keyboard-keys {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-}
-
-.keyboard-key {
-  padding: 10px;
-  font-size: 1rem;
-  border: none;
-  background-color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.keyboard-key:hover {
-  background-color: #e0e0e0;
-}
-
-.keyboard-backspace {
-  grid-column: span 2;
-  padding: 10px;
-  font-size: 1.2rem;
-  background-color: #ff6666;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.keyboard-backspace:hover {
-  background-color: #ff4444;
+.hg-button {
+  height: 60px !important;     /* Increase height */
+  font-size: 1.2rem !important; /* Optional: Make text bigger */
+  line-height: 60px !important; /* Center text vertically */
 }

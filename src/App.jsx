@@ -6,16 +6,22 @@ import TermsAndConditions from './pages/TermsAndConditions';
 import AdminPanel from './pages/AdminPanel';
 import AddRecipient from './pages/Recipient';
 import Lockers from './pages/Lockers';
-import ActivityLogs from './pages/ActivityLogs'; // New import
-import { IdleTimeoutHandler } from './utils/useIdleTimeout';
+import ActivityLogs from './pages/ActivityLogs';
 import AdminSettings from './pages/AdminSettings';
 import EspDevices from './pages/EspDevices';
+
+import { IdleTimeoutHandler } from './utils/useIdleTimeout';
+import GlobalKeyboardProvider from './pages/components/GlobalKeyboardProvider'; // 👈 Import the provider
 
 function App() {
   return (
     <Router>
       <div className="app-container">
         <IdleTimeoutHandler />
+        
+        {/* 👇 Global Keyboard rendered once for all pages */}
+        <GlobalKeyboardProvider />
+
         <Routes>
           <Route path="/" element={<Splash />} />
           <Route path="/main" element={<Main />} />
