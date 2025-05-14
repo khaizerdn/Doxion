@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 25, 2025 at 11:52 AM
+-- Generation Time: May 14, 2025 at 03:17 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -38,13 +38,6 @@ CREATE TABLE `activitylogs` (
   `date_received` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `activitylogs`
---
-
-INSERT INTO `activitylogs` (`id`, `email`, `recipientEmail`, `note`, `lockerNumber`, `otp`, `created_at`, `date_received`) VALUES
-('291823987712', 'cc.khaizer.noguera@cvsu.edu.ph', 'cc.marklawrence.lindo@cvsu.edu.ph', '123123', '1', '870882', '2025-03-24 11:38:48', '2025-03-24 11:40:25');
-
 -- --------------------------------------------------------
 
 --
@@ -59,16 +52,6 @@ CREATE TABLE `espdetected_logs` (
   `leds` varchar(50) DEFAULT NULL,
   `detected_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `espdetected_logs`
---
-
-INSERT INTO `espdetected_logs` (`id`, `device_name`, `ip_address`, `locks`, `leds`, `detected_at`) VALUES
-(3102721248256, 'A_ESP8266_82768d', '192.168.1.191', 'LockA', 'LedA', '2025-03-24 11:36:17'),
-(3103274896384, 'B_ESP8266_82768d', '192.168.1.191', 'LockB', 'LedB', '2025-03-24 11:36:17'),
-(3103815961600, 'C_ESP8266_82768d', '192.168.1.191', 'LockC', 'LedC', '2025-03-24 11:36:17'),
-(3104327666688, 'D_ESP8266_82768d', '192.168.1.191', 'LockD', 'LedD', '2025-03-24 11:36:17');
 
 -- --------------------------------------------------------
 
@@ -86,16 +69,6 @@ CREATE TABLE `lockers` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `lockers`
---
-
-INSERT INTO `lockers` (`id`, `number`, `device_name`, `ip_address`, `locks`, `leds`, `created_at`) VALUES
-('3235680685056', '1', 'A_ESP8266_82768d', '192.168.1.191', 'LockA', 'LedA', '2025-03-24 11:36:49'),
-('3305088027648', '2', 'B_ESP8266_82768d', '192.168.1.191', 'LockB', 'LedB', '2025-03-24 11:37:05'),
-('3329414990848', '3', 'C_ESP8266_82768d', '192.168.1.191', 'LockC', 'LedC', '2025-03-24 11:37:11'),
-('3352844372992', '4', 'D_ESP8266_82768d', '192.168.1.191', 'LockD', 'LedD', '2025-03-24 11:37:17');
-
 -- --------------------------------------------------------
 
 --
@@ -111,17 +84,6 @@ CREATE TABLE `recipients` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `recipients`
---
-
-INSERT INTO `recipients` (`id`, `email`, `name`, `title`, `image`, `created_at`) VALUES
-(1558183409664, 'cc.kristine.bulawan@cvsu.edu.ph', 'Kristine Bulawan', 'Professor', 'https://i.pinimg.com/736x/b2/d7/c5/b2d7c59703e43479b6494126df26b271.jpg', '2025-03-11 10:54:01'),
-(3410485419008, 'cc.sebastianjerome.parilla@cvsu.edu.ph', 'Sebastian Jerome', 'OJT Coordinator', 'https://upload.wikimedia.org/wikipedia/en/d/d5/Professor_%28Money_Heist%29.jpg', '2025-03-19 07:15:26'),
-(3655629904896, 'cc.carlo.gallego@cvsu.edu.ph', 'Carlo G. Gallego', 'Dean', 'https://static.wikia.nocookie.net/money-heist/images/c/ca/Nairobi_-_part_5_volume_2_poster.jpg', '2025-03-19 07:16:25'),
-(10574184657920, 'cc.marklawrence.lindo@cvsu.edu.ph', 'Dr. Mark Lawrence', 'Engineer', 'https://mir-s3-cdn-cf.behance.net/project_modules/fs/26690f96860207.5eb83091ee6d2.jpg', '2025-03-14 09:33:58'),
-(15478728950784, 'cc.khaizer.noguera@cvsu.edu.ph', 'Engr. Khaizer Noguera', 'Professor', 'https://static.wikia.nocookie.net/money-heist/images/e/ee/Bogot%C3%A1_-_part_5_volume_2_poster.jpg', '2025-03-14 08:02:00');
-
 -- --------------------------------------------------------
 
 --
@@ -133,15 +95,12 @@ CREATE TABLE `users` (
   `email` varchar(255) NOT NULL,
   `pin` char(6) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `pending_email` varchar(255) DEFAULT NULL,
+  `pending_pin` varchar(6) DEFAULT NULL,
+  `otp` varchar(6) DEFAULT NULL,
+  `otp_expires` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`id`, `email`, `pin`, `created_at`, `updated_at`) VALUES
-(2147483647, 'cc.marklawrence.lindo@cvsu.edu.ph', '123123', '2025-03-14 09:32:14', '2025-03-14 09:32:14');
 
 --
 -- Indexes for dumped tables
