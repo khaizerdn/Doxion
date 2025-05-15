@@ -77,7 +77,7 @@ const ReceiveForm = ({ onClose }) => {
   const inputRefs = useRef([]);
 
   useEffect(() => {
-    inputRefs.current[0]?.focus();
+    document.querySelector('.input-field')?.focus();
   }, []);
 
   const handleLockerChange = useCallback((e) => {
