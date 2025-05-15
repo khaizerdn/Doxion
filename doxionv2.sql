@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 15, 2025 at 04:43 PM
+-- Generation Time: May 15, 2025 at 05:17 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -52,6 +52,16 @@ CREATE TABLE `espdetected_logs` (
   `leds` varchar(50) DEFAULT NULL,
   `detected_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `espdetected_logs`
+--
+
+INSERT INTO `espdetected_logs` (`id`, `device_name`, `ip_address`, `locks`, `leds`, `detected_at`) VALUES
+(6731414944768, 'A_ESP8266_82768d', '192.168.1.191', 'LockA', 'LedA', '2025-05-15 15:16:57'),
+(6732132170752, 'B_ESP8266_82768d', '192.168.1.191', 'LockB', 'LedB', '2025-05-15 15:16:57'),
+(6733117832192, 'C_ESP8266_82768d', '192.168.1.191', 'LockC', 'LedC', '2025-05-15 15:16:57'),
+(6733969275904, 'D_ESP8266_82768d', '192.168.1.191', 'LockD', 'LedD', '2025-05-15 15:16:58');
 
 -- --------------------------------------------------------
 
