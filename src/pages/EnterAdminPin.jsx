@@ -1,14 +1,34 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from './components/Button';
 
 const EnterAdminPin = ({ onSuccess, onClose }) => {
     const [pin, setPin] = useState(['', '', '', '', '', '']);
     const [pinError, setPinError] = useState('');
     const inputRefs = useRef([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        inputRefs.current[0]?.focus();
-    }, []);
+        // Check if admin exists on mount
+        const checkAdmin = async () => {
+            try {
+                const response = await fetch('http://localhost:5000/api/admin/verify-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: '000000' }), // Dummy PIN to trigger noAdmin response
+                });
+                const data = await response.json();
+                if (data.noAdmin) {
+                    navigate('/admin-settings');
+                } else {
+                    inputRefs.current[0]?.focus();
+                }
+            } catch {
+                setPinError('Error checking admin status. Please try again.');
+            }
+        };
+        checkAdmin();
+    }, [navigate]);
 
     const handleChange = (index, value) => {
         if (!/^[0-9]?$/.test(value)) return;
@@ -41,6 +61,10 @@ const EnterAdminPin = ({ onSuccess, onClose }) => {
 
             const data = await response.json();
             if (!response.ok) {
+                if (data.noAdmin) {
+                    navigate('/admin-settings');
+                    return;
+                }
                 setPinError(data.error || 'Invalid PIN');
                 return;
             }
@@ -100,7 +124,6 @@ const EnterAdminPin = ({ onSuccess, onClose }) => {
     `;
 
     return (
-        
         <div className="main-container">
             <style>{styles}</style>
             <div className="content-wrapper">
@@ -110,21 +133,21 @@ const EnterAdminPin = ({ onSuccess, onClose }) => {
                         Please enter the 6-digit admin PIN to access the admin panel.
                     </p>
                     <div className="otp-container">
-                    <div className="otp-input-group">
-                        {pin.map((digit, index) => (
-                            <input
-                                key={index}
-                                type="text"
-                                className={`pin-input ${pinError ? 'pin-input-error' : ''}`}
-                                value={digit}
-                                onChange={(e) => handleChange(index, e.target.value)}
-                                onKeyDown={(e) => handleKeyDown(index, e)}
-                                maxLength={1}
-                                ref={(el) => (inputRefs.current[index] = el)}
-                                aria-label={`PIN digit ${index + 1}`}
-                            />
-                        ))}
-                    </div>
+                        <div className="otp-input-group">
+                            {pin.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    type="text"
+                                    className={`pin-input ${pinError ? 'pin-input-error' : ''}`}
+                                    value={digit}
+                                    onChange={(e) => handleChange(index, e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(index, e)}
+                                    maxLength={1}
+                                    ref={(el) => (inputRefs.current[index] = el)}
+                                    aria-label={`PIN digit ${index + 1}`}
+                                />
+                            ))}
+                        </div>
                     </div>
                     {pinError && (
                         <p className="error-message" aria-live="polite">

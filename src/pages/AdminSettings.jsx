@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from './components/Button';
 import Input from './components/Input';
 import Lottie from 'react-lottie-player';
@@ -113,42 +114,43 @@ const EnterAdminOTP = ({ onNext, onClose, error }) => {
     };
 
     return (
-        <>
         <div className="main-container">
-        <div className="content-wrapper">
-            <h2>Verification</h2>
-            <p>Please enter the OTP sent to the current admin's email.<button
-                className={`resend-button ${resendCooldown > 0 ? 'disabled' : ''}`}
-                onClick={handleResend}
-                disabled={resendCooldown > 0}
-            >
-                {resendCooldown > 0 ? `Resend OTP? (${resendCooldown}s)` : 'Resend OTP?'}
-            </button></p>
-            <div className="otp-container">
-                <div className="otp-input-group">
-                    {otp.map((digit, index) => (
-                        <input
-                            key={index}
-                            type="text"
-                            className={`otp-input ${otpError ? 'otp-input-error' : ''}`}
-                            value={digit}
-                            onChange={(e) => handleChange(index, e.target.value)}
-                            onKeyDown={(e) => handleKeyDown(index, e)}
-                            maxLength={1}
-                            ref={(el) => (inputRefs.current[index] = el)}
-                            aria-label={`OTP digit ${index + 1}`}
-                        />
-                    ))}
+            <div className="content-wrapper">
+                <h2>Verification</h2>
+                <p>
+                    Please enter the OTP sent to the current admin's email.
+                    <button
+                        className={`resend-button ${resendCooldown > 0 ? 'disabled' : ''}`}
+                        onClick={handleResend}
+                        disabled={resendCooldown > 0}
+                    >
+                        {resendCooldown > 0 ? `Resend OTP? (${resendCooldown}s)` : 'Resend OTP?'}
+                    </button>
+                </p>
+                <div className="otp-container">
+                    <div className="otp-input-group">
+                        {otp.map((digit, index) => (
+                            <input
+                                key={index}
+                                type="text"
+                                className={`otp-input ${otpError ? 'otp-input-error' : ''}`}
+                                value={digit}
+                                onChange={(e) => handleChange(index, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(index, e)}
+                                maxLength={1}
+                                ref={(el) => (inputRefs.current[index] = el)}
+                                aria-label={`OTP digit ${index + 1}`}
+                            />
+                        ))}
+                    </div>
+                </div>
+                {otpError && <p className="error-message">{otpError}</p>}
+                <div className="action-button">
+                    <Button type="secondary" onClick={onClose}>CANCEL</Button>
+                    <Button type="primary" onClick={handleSubmit}>VERIFY</Button>
                 </div>
             </div>
-            {otpError && <p className="error-message">{otpError}</p>}
-            <div className="action-button">
-                <Button type="secondary" onClick={onClose}>CANCEL</Button>
-                <Button type="primary" onClick={handleSubmit}>VERIFY</Button>
-            </div>
-            </div>
-            </div>
-        </>
+        </div>
     );
 };
 
@@ -165,6 +167,7 @@ const AdminSettings = () => {
     });
     const [status, setStatus] = useState('idle');
     const inputRefs = useRef([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (step === 'input') {
@@ -175,13 +178,11 @@ const AdminSettings = () => {
     useEffect(() => {
         if (step === 'success') {
             const timer = setTimeout(() => {
-                setStep('input');
-                setFormData({ email: '', pin: ['', '', '', '', '', ''] });
-                setErrors({ email: '', pin: '', otp: '' });
-            }, 5000); // 5 seconds
+                navigate('/adminpanel');
+            }, 3000); // 3 seconds delay to show success message
             return () => clearTimeout(timer);
         }
-    }, [step]);
+    }, [step, navigate]);
 
     const handleEmailChange = useCallback((e) => {
         setFormData((prev) => ({ ...prev, email: e.target.value }));

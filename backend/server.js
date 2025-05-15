@@ -611,11 +611,16 @@ app.post('/api/admin/verify-pin', async (req, res) => {
     }
 
     try {
-        const [existing] = await pool.execute(
+        const [existing] = await pool.execute('SELECT * FROM users LIMIT 1');
+        if (existing.length === 0) {
+            return res.status(404).json({ error: 'No admin set', noAdmin: true });
+        }
+
+        const [user] = await pool.execute(
             'SELECT * FROM users WHERE pin = ? LIMIT 1',
             [pin]
         );
-        if (existing.length === 0) {
+        if (user.length === 0) {
             return res.status(401).json({ error: 'Invalid PIN' });
         }
 
