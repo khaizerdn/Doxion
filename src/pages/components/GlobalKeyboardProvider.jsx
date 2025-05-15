@@ -9,44 +9,50 @@ const GlobalKeyboardProvider = () => {
   const wrapperRef = useRef(null);
 
   const insertTextAtCursor = (input, text) => {
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const newValue = input.value.slice(0, start) + text + input.value.slice(end);
-
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    ).set;
-    nativeInputValueSetter.call(input, newValue);
-
-    const newCaretPos = start + text.length;
-    input.setSelectionRange(newCaretPos, newCaretPos);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    if (input.tagName === 'TEXTAREA') {
+      input.focus();
+      document.execCommand('insertText', false, text);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    } else {
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const newValue = input.value.slice(0, start) + text + input.value.slice(end);
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        'value'
+      ).set;
+      nativeInputValueSetter.call(input, newValue);
+      const newCaretPos = start + text.length;
+      input.setSelectionRange(newCaretPos, newCaretPos);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
   };
 
   const deleteTextAtCursor = (input) => {
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    if (start === 0 && end === 0) return;
-
-    let newStart = start;
-    let newValue;
-
-    if (start === end) {
-      newValue = input.value.slice(0, start - 1) + input.value.slice(end);
-      newStart = start - 1;
+    if (input.tagName === 'TEXTAREA') {
+      input.focus();
+      document.execCommand('delete', false);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
     } else {
-      newValue = input.value.slice(0, start) + input.value.slice(end);
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      if (start === 0 && end === 0) return;
+      let newStart = start;
+      let newValue;
+      if (start === end) {
+        newValue = input.value.slice(0, start - 1) + input.value.slice(end);
+        newStart = start - 1;
+      } else {
+        newValue = input.value.slice(0, start) + input.value.slice(end);
+      }
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        'value'
+      ).set;
+      nativeInputValueSetter.call(input, newValue);
+      input.setSelectionRange(newStart, newStart);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
     }
-
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    ).set;
-    nativeInputValueSetter.call(input, newValue);
-
-    input.setSelectionRange(newStart, newStart);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
   const onKeyPress = (button) => {
