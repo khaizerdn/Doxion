@@ -92,7 +92,19 @@ const GlobalKeyboardProvider = () => {
         setLayout('default');
       }
     };
-
+  
+    let touchStartTime = 0;
+    let touchMoved = false;
+  
+    const handleTouchStart = () => {
+      touchStartTime = Date.now();
+      touchMoved = false;
+    };
+  
+    const handleTouchMove = () => {
+      touchMoved = true;
+    };
+  
     const handleClickOutside = (e) => {
       if (
         wrapperRef.current &&
@@ -100,18 +112,31 @@ const GlobalKeyboardProvider = () => {
         e.target.tagName !== 'INPUT' &&
         e.target.tagName !== 'TEXTAREA'
       ) {
-        setInputElement(null);
+        // For touch, only dismiss if tap (short duration, no movement)
+        if (e.type === 'touchstart') {
+          const touchDuration = Date.now() - touchStartTime;
+          if (touchDuration < 200 && !touchMoved) {
+            setInputElement(null);
+          }
+        } else if (e.type === 'mousedown') {
+          // For mouse, dismiss on click
+          setInputElement(null);
+        }
       }
     };
-
+  
     document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
-
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleClickOutside);
+  
     return () => {
       document.removeEventListener('focusin', handleFocusIn);
       document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleClickOutside);
     };
   }, []);
 
