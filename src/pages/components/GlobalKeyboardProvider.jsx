@@ -78,7 +78,6 @@ const GlobalKeyboardProvider = () => {
     }
   };
 
-  // Focus tracking and outside click handling
   useEffect(() => {
     const handleFocusIn = (e) => {
       const el = e.target;
@@ -101,31 +100,16 @@ const GlobalKeyboardProvider = () => {
 
     document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
 
     return () => {
       document.removeEventListener('focusin', handleFocusIn);
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, []);
 
-  // Enable touch to simulate click on keyboard buttons
-  useEffect(() => {
-    const handleTouchStart = (e) => {
-      e.preventDefault();
-      e.currentTarget.click();
-    };
-
-    const buttons = document.querySelectorAll('.hg-button');
-    buttons.forEach((btn) => {
-      btn.addEventListener('touchstart', handleTouchStart, { passive: false });
-    });
-
-    return () => {
-      buttons.forEach((btn) => {
-        btn.removeEventListener('touchstart', handleTouchStart);
-      });
-    };
-  }); // No deps so it runs after every render
+  // ⚠️ Avoid manual DOM patching — react-simple-keyboard already handles touch/click
 
   if (!inputElement) return null;
 
@@ -139,9 +123,10 @@ const GlobalKeyboardProvider = () => {
         backgroundColor: '#f8f8f8',
         zIndex: 9999,
         boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+        touchAction: 'none', // prevents ghost clicks
         minHeight: '280px',
       }}
-      onPointerDown={(e) => e.preventDefault()} // Improved for touchscreen compatibility
+      onPointerDown={(e) => e.preventDefault()} // Prevent focus loss on tap
     >
       <Keyboard
         keyboardRef={(r) => (keyboardRef.current = r)}
@@ -152,19 +137,19 @@ const GlobalKeyboardProvider = () => {
             'q w e r t y u i o p',
             'a s d f g h j k l',
             '{shift} z x c v b n m {bksp}',
-            '{numbers} {space} .',
+            '{numbers} {space} . {done}',
           ],
           shift: [
             'Q W E R T Y U I O P',
             'A S D F G H J K L',
             '{shift} Z X C V B N M {bksp}',
-            '{numbers} {space} .',
+            '{numbers} {space} . {done}',
           ],
           numbers: [
             '1 2 3 4 5 6 7 8 9 0',
             '- / : ; ( ) ₱ & @',
             '. , ? ! \' " # % + =',
-            '{abc} {space} .',
+            '{abc} {space} . {done}',
           ],
         }}
         display={{
@@ -176,6 +161,7 @@ const GlobalKeyboardProvider = () => {
           '{done}': 'Done',
         }}
         theme="hg-theme-default hg-layout-default"
+        physicalKeyboardHighlight={true}
       />
     </div>
   );
