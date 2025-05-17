@@ -108,6 +108,10 @@ p {
   min-height: 120vh;
 }
 
+.keyboard-visible .main-container-two {
+  min-height: 120vh;
+}
+
 /* Main layout */
 .main-container {
   display: flex;
