@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BackButton from './components/BackButton';
+import useKeyboardPadding from '../utils/useKeyboardPadding'; // Import the hook
 
 function AdminPanel() {
+  useKeyboardPadding('.main-container-two'); // Apply padding for main-container-two
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);

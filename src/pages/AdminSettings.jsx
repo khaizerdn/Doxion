@@ -5,6 +5,7 @@ import Input from './components/Input';
 import Lottie from 'react-lottie-player';
 import searchDocuAnimationData from '../assets/SearchDocuAnimation.json';
 import BackButton from './components/BackButton';
+import useKeyboardPadding from '../utils/useKeyboardPadding'; // Import the hook
 
 // Success SVG Icon
 const SuccessIcon = () => (
@@ -168,6 +169,8 @@ const AdminSettings = () => {
     const [status, setStatus] = useState('idle');
     const inputRefs = useRef([]);
     const navigate = useNavigate();
+
+    useKeyboardPadding('.main-container-two'); // Apply padding for main-container-two
 
     useEffect(() => {
         if (step === 'input') {

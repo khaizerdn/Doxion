@@ -3,6 +3,7 @@ import BackButton from './components/BackButton';
 import Button from './components/Button';
 import Input from './components/Input';
 import { validateRequired } from '../utils/validators';
+import useKeyboardPadding from '../utils/useKeyboardPadding';
 
 const LockerItem = ({ item, onEdit }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -103,6 +104,7 @@ const EspDeviceItem = ({ item, onSelect }) => {
 };
 
 function Lockers() {
+  useKeyboardPadding('.main-container-two');
   const [lockers, setLockers] = useState([]);
   const [searchTerm, setSearchTerm] = useState(''); // State for search term
   const [espDevices, setEspDevices] = useState([]);

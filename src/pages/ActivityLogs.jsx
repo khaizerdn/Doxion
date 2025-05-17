@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BackButton from './components/BackButton';
 import Input from './components/Input';
+import useKeyboardPadding from '../utils/useKeyboardPadding';
 
 // Utility function to format date without seconds
 const formatDateTime = (dateString) => {
@@ -15,6 +16,7 @@ const formatDateTime = (dateString) => {
 };
 
 function ActivityLogs() {
+  useKeyboardPadding('.main-container-two');
   const [logs, setLogs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);

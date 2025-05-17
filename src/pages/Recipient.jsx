@@ -3,6 +3,7 @@ import BackButton from './components/BackButton';
 import Button from './components/Button';
 import Input from './components/Input';
 import { validateEmail, validateRequired } from '../utils/validators';
+import useKeyboardPadding from '../utils/useKeyboardPadding';
 
 // RecipientItem component remains unchanged for brevity
 const RecipientItem = ({ item, onEdit }) => {
@@ -80,6 +81,7 @@ const RecipientItem = ({ item, onEdit }) => {
 };
 
 function Recipient() {
+  useKeyboardPadding('.main-container-two');
   const [recipients, setRecipients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
