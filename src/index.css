@@ -104,6 +104,10 @@ p {
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
 }
 
+.keyboard-visible .main-container {
+  min-height: 120vh;
+}
+
 /* Main layout */
 .main-container {
   display: flex;

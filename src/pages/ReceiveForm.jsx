@@ -4,6 +4,7 @@ import Input from './components/Input';
 import Lottie from 'react-lottie';
 import searchDocuAnimationData from '../assets/SearchDocuAnimation.json';
 import SelectUnreceivedLocker from './SelectUnreceivedLocker';
+import useKeyboardPadding from '../utils/useKeyboardPadding';
 
 // Locker SVG Icon
 const LockerIcon = () => (
@@ -64,6 +65,8 @@ const getRandomSuccessMessage = (lockerNumber) => {
 };
 
 const ReceiveForm = ({ onClose }) => {
+  useKeyboardPadding();
+
   const [formData, setFormData] = useState({
     lockerNumber: '',
     pin: ['', '', '', '', '', ''],

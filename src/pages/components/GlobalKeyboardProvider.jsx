@@ -92,19 +92,19 @@ const GlobalKeyboardProvider = () => {
         setLayout('default');
       }
     };
-  
+
     let touchStartTime = 0;
     let touchMoved = false;
-  
+
     const handleTouchStart = () => {
       touchStartTime = Date.now();
       touchMoved = false;
     };
-  
+
     const handleTouchMove = () => {
       touchMoved = true;
     };
-  
+
     const handleClickOutside = (e) => {
       if (
         wrapperRef.current &&
@@ -112,25 +112,23 @@ const GlobalKeyboardProvider = () => {
         e.target.tagName !== 'INPUT' &&
         e.target.tagName !== 'TEXTAREA'
       ) {
-        // For touch, only dismiss if tap (short duration, no movement)
         if (e.type === 'touchstart') {
           const touchDuration = Date.now() - touchStartTime;
           if (touchDuration < 200 && !touchMoved) {
             setInputElement(null);
           }
         } else if (e.type === 'mousedown') {
-          // For mouse, dismiss on click
           setInputElement(null);
         }
       }
     };
-  
+
     document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('touchstart', handleTouchStart);
     document.addEventListener('touchmove', handleTouchMove);
     document.addEventListener('touchend', handleClickOutside);
-  
+
     return () => {
       document.removeEventListener('focusin', handleFocusIn);
       document.removeEventListener('mousedown', handleClickOutside);
@@ -140,7 +138,14 @@ const GlobalKeyboardProvider = () => {
     };
   }, []);
 
-  // ⚠️ Avoid manual DOM patching — react-simple-keyboard already handles touch/click
+  // Add class to body when keyboard is visible
+  useEffect(() => {
+    if (inputElement) {
+      document.body.classList.add('keyboard-visible');
+    } else {
+      document.body.classList.remove('keyboard-visible');
+    }
+  }, [inputElement]);
 
   if (!inputElement) return null;
 
@@ -154,10 +159,10 @@ const GlobalKeyboardProvider = () => {
         backgroundColor: '#f8f8f8',
         zIndex: 9999,
         boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
-        touchAction: 'none', // prevents ghost clicks
+        touchAction: 'none',
         minHeight: '280px',
       }}
-      onPointerDown={(e) => e.preventDefault()} // Prevent focus loss on tap
+      onPointerDown={(e) => e.preventDefault()}
     >
       <Keyboard
         keyboardRef={(r) => (keyboardRef.current = r)}

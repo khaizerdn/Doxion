@@ -3,8 +3,10 @@ import React, { useState, useEffect } from 'react';
 import ConfirmEmail from '../pages/ConfirmEmail';
 import EnterOTP from '../pages/EnterOTP';
 import SubmissionForm from '../pages/SubmissionForm';
+import useKeyboardPadding from './useKeyboardPadding';
 
 const SubmissionSteps = ({ onClose }) => {
+  useKeyboardPadding();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     email: '',
