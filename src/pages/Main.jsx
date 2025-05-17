@@ -3,15 +3,26 @@ import { Link, useNavigate } from 'react-router-dom';
 import Button from './components/Button';
 import SubmissionSteps from '../utils/SubmissionSteps';
 import ReceiveForm from '../pages/ReceiveForm';
+import EnterAdminPin from './EnterAdminPin';
 
 function Main() {
   const [showSubmissionSteps, setShowSubmissionSteps] = useState(false);
   const [showReceiveForm, setShowReceiveForm] = useState(false);
+  const [showAdminPin, setShowAdminPin] = useState(false);
   const navigate = useNavigate();
 
   const handleAdminButtonClick = () => {
+    setShowAdminPin(true);
+};
+
+const handlePinSuccess = () => {
+    setShowAdminPin(false);
     navigate('/adminpanel');
-  };
+};
+
+const handlePinClose = () => {
+    setShowAdminPin(false);
+};
 
   const mainStyles = `
     .terms-link {
@@ -26,19 +37,19 @@ function Main() {
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      flex-wrap: nowrap;
+      flex-wrap: nowrap; /* Prevent wrapping */
     }
     .header-title {
       font-weight: 900;
       margin: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: nowrap; /* Prevent title from wrapping */
+      overflow: hidden; /* Hide overflow if title is too long */
+      text-overflow: ellipsis; /* Add ellipsis for long titles */
       color: var(--color-accent);
     }
     .admin-button {
-      height: 100%;
-      aspect-ratio: 1 / 1;
+      height: 100%; /* Match the height of the header-container */
+      aspect-ratio: 1 / 1; /* Enforce 1:1 ratio (modern browsers) */
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -47,22 +58,24 @@ function Main() {
       line-height: 1;
     }
     .admin-button-link {
-      text-decoration: none;
+      text-decoration: none; /* Remove underline from Link */
     }
     .admin-icon {
       width: 50%;
       height: 50%;
-      fill: currentColor;
+      fill: currentColor; /* Inherit color from Button */
     }
   `;
 
   return (
     <>
       <style>{mainStyles}</style>
-      {showSubmissionSteps ? (
-        <SubmissionSteps onClose={() => setShowSubmissionSteps(false)} />
+      {showAdminPin ? (
+          <EnterAdminPin onSuccess={handlePinSuccess} onClose={handlePinClose} />
+      ) : showSubmissionSteps ? (
+          <SubmissionSteps onClose={() => setShowSubmissionSteps(false)} />
       ) : showReceiveForm ? (
-        <ReceiveForm onClose={() => setShowReceiveForm(false)} />
+          <ReceiveForm onClose={() => setShowReceiveForm(false)} />
       ) : (
         <div className="main-container">
           <div className="content-wrapper">
@@ -85,6 +98,7 @@ function Main() {
                 </Button>
               </div>
             </div>
+            
             <Button
               type="primary"
               onClick={() => setShowSubmissionSteps(true)}
