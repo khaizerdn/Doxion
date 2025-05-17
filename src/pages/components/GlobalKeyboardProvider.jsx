@@ -64,6 +64,7 @@ const GlobalKeyboardProvider = () => {
         setLayout((prev) => (prev === 'default' ? 'shift' : 'default'));
         break;
       case '{bksp}':
+        inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }));
         deleteTextAtCursor(inputElement);
         break;
       case '{space}':
