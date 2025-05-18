@@ -635,7 +635,8 @@ app.get('/', (req, res) => {
     res.send('Backend server is running');
 });
 
+const HOST = '0.0.0.0';
 // Start server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+    console.log(`✅ Server running at http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
 });
