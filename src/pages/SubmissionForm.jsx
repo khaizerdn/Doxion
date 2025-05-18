@@ -143,7 +143,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
   const triggerLockerAndLed = async (ipAddress, lock, led) => {
     try {
-      const response = await fetch('http://localhost:5000/api/trigger-esp', {
+      const response = await fetch('http://127.0.0.1:5000/api/trigger-esp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ip_address: ipAddress, lock, led }),
@@ -167,7 +167,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     setSubmissionStatus('loading');
     try {
       // Step 1: Fetch locker details
-      const lockerResponse = await fetch('http://localhost:5000/api/lockers');
+      const lockerResponse = await fetch('http://127.0.0.1:5000/api/lockers');
       if (!lockerResponse.ok) throw new Error('Failed to fetch lockers');
       const lockers = await lockerResponse.json();
       
@@ -185,7 +185,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         date_received: null,
       };
   
-      const activityResponse = await fetch('http://localhost:5000/api/activitylogs', {
+      const activityResponse = await fetch('http://127.0.0.1:5000/api/activitylogs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData),
