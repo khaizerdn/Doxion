@@ -309,95 +309,90 @@ app.delete('/api/recipients/:id', async (req, res) => {
 // POST /api/activitylogs
 app.post('/api/activitylogs', async (req, res) => {
     const { email, recipientEmail, note, lockerNumber, date_received } = req.body;
-
+  
     if (!email) return res.status(400).json({ error: 'Sender email is required' });
     if (!recipientEmail) return res.status(400).json({ error: 'Recipient email is required' });
     if (!note) return res.status(400).json({ error: 'Note is required' });
     if (!lockerNumber) return res.status(400).json({ error: 'Locker number is required' });
-
+  
     const id = uid.getUniqueID().toString();
     const otp = generateOTP();
-
+  
     try {
-        const [lockerRows] = await pool.execute('SELECT number FROM lockers WHERE number = ?', [lockerNumber]);
-        if (lockerRows.length === 0) {
-            return res.status(404).json({ error: 'Locker number does not exist' });
-        }
-
-        const [recipientRows] = await pool.execute('SELECT email FROM recipients WHERE email = ?', [recipientEmail]);
-        if (recipientRows.length === 0) {
-            return res.status(404).json({ error: 'Recipient email does not exist' });
-        }
-
-        const [result] = await pool.execute(
-            'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, otp, date_received) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [id, email, recipientEmail, note, lockerNumber, otp, date_received || null]
-        );
-
-        if (result.affectedRows === 1) {
-            const formattedDateTime = new Date().toLocaleString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric',
-                hour12: true,
-            });
-
-            const recipientMailOptions = {
-                from: `"Doxion" <${process.env.EMAIL_USER}>`,
-                to: recipientEmail,
-                subject: `New Doxion Submission`,
-                text: `Dear Recipient,\n\n` +
-                    `A new document has been submitted to you via Doxion's Locker. Please use the following OTP to retrieve it securely:\n\n` +
-                    `${formattedDateTime}\n` +
-                    `Locker Number: ${lockerNumber}\n` +
-                    `OTP: ${otp}\n` +
-                    `From: ${email}\n\n` +
-                    `Document:\n${note}\n\n` +
-                    `This is an automated message. Please do not reply directly to this email.`,
-            };
-
-            const senderMailOptions = {
-                from: `"Doxion" <${process.env.EMAIL_USER}>`,
-                to: email,
-                subject: 'Document Successfully Submitted',
-                text: `Dear Sender,\n\n` +
-                    `Your document was successfully submitted. You will be notified once the recipient retrieves it:\n\n` +
-                    `${formattedDateTime}\n` +
-                    `Locker Number: ${lockerNumber}\n` +
-                    `To: ${recipientEmail}\n\n` +
-                    `Note:\n${note}\n\n` +
-                    `This is an automated message. Please do not reply directly to this email.`,
-            };
-
-            await Promise.all([
-                transporter.sendMail(recipientMailOptions),
-                transporter.sendMail(senderMailOptions),
-            ]).catch((emailError) => {
-                console.error('Error sending emails:', emailError);
-            });
-
-            console.log(`Activity log ${id} saved and emails sent successfully for ${email}`);
-            res.status(201).json({
-                id,
-                email,
-                recipientEmail,
-                note,
-                lockerNumber,
-                date_received: date_received || null,
-                created_at: new Date().toISOString(),
-            });
-        } else {
-            throw new Error('Failed to insert activity log');
-        }
+      const [lockerRows] = await pool.execute('SELECT number FROM lockers WHERE number = ?', [lockerNumber]);
+      if (lockerRows.length === 0) {
+        return res.status(404).json({ error: 'Locker number does not exist' });
+      }
+  
+      const [result] = await pool.execute(
+        'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, otp, date_received) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [id, email, recipientEmail, note, lockerNumber, otp, date_received || null]
+      );
+  
+      if (result.affectedRows === 1) {
+        const formattedDateTime = new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true,
+        });
+  
+        const recipientMailOptions = {
+          from: `"Doxion" <${process.env.EMAIL_USER}>`,
+          to: recipientEmail,
+          subject: `New Doxion Submission`,
+          text: `Dear Recipient,\n\n` +
+                `A new document has been submitted to you via Doxion's Locker. Please use the following OTP to retrieve it securely:\n\n` +
+                `${formattedDateTime}\n` +
+                `Locker Number: ${lockerNumber}\n` +
+                `OTP: ${otp}\n` +
+                `From: ${email}\n\n` +
+                `Document:\n${note}\n\n` +
+                `This is an automated message. Please do not reply directly to this email.`,
+        };
+  
+        const senderMailOptions = {
+          from: `"Doxion" <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: 'Document Successfully Submitted',
+          text: `Dear Sender,\n\n` +
+                `Your document was successfully submitted. You will be notified once the recipient retrieves it:\n\n` +
+                `${formattedDateTime}\n` +
+                `Locker Number: ${lockerNumber}\n` +
+                `To: ${recipientEmail}\n\n` +
+                `Note:\n${note}\n\n` +
+                `This is an automated message. Please do not reply directly to this email.`,
+        };
+  
+        await Promise.all([
+          transporter.sendMail(recipientMailOptions),
+          transporter.sendMail(senderMailOptions),
+        ]).catch((emailError) => {
+          console.error('Error sending emails:', emailError);
+        });
+  
+        console.log(`Activity log ${id} saved and emails sent successfully for ${email}`);
+        res.status(201).json({
+          id,
+          email,
+          recipientEmail,
+          note,
+          lockerNumber,
+          date_received: date_received || null,
+          created_at: new Date().toISOString(),
+        });
+      } else {
+        throw new Error('Failed to insert activity log');
+      }
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ error: 'Activity log ID conflict' });
-        }
-        handleDbError(res, error);
+      if (error.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({ error: 'Activity log ID conflict' });
+      }
+      handleDbError(res, error);
     }
-});
+  });
 
 // GET /api/activitylogs
 app.get('/api/activitylogs', async (req, res) => {

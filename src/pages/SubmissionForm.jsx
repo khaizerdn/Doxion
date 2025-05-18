@@ -163,7 +163,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-
+  
     setSubmissionStatus('loading');
     try {
       // Step 1: Fetch locker details
@@ -175,7 +175,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       if (!selectedLocker) {
         throw new Error(`Locker ${formData.lockerNumber} not found`);
       }
-
+  
       // Step 2: Submit activity log
       const submissionData = {
         email: initialData.email || '',
@@ -184,20 +184,20 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         lockerNumber: formData.lockerNumber,
         date_received: null,
       };
-
+  
       const activityResponse = await fetch('http://localhost:5000/api/activitylogs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData),
       });
-
+  
       if (!activityResponse.ok) {
         const errorData = await activityResponse.json();
         throw new Error(errorData.error || 'Failed to submit activity log');
       }
-
+  
       const savedData = await activityResponse.json();
-
+  
       // Step 3: Trigger locker and LED
       const { ip_address, locks, leds } = selectedLocker;
       if (ip_address && locks && leds) {
@@ -205,7 +205,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       } else {
         console.warn('Locker missing ip_address, locks, or leds; skipping trigger');
       }
-
+  
       // Step 4: Mark as successful
       setSubmissionStatus('success');
       setTimeout(() => onNext({ ...formData, activity_log_id: savedData.id }), 10000);
