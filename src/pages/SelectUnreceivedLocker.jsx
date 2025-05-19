@@ -141,42 +141,58 @@ const SelectUnreceivedLocker = ({ onSelect, onBack }) => {
         fetch('http://localhost:5000/api/activitylogs'),
         fetch('http://localhost:5000/api/recipients'),
       ]);
-
+  
       if (!lockerResponse.ok) throw new Error('Failed to fetch lockers');
       if (!activityLogResponse.ok) throw new Error('Failed to fetch activity logs');
       if (!recipientResponse.ok) throw new Error('Failed to fetch recipients');
-
+  
       const [lockerData, activityLogData, recipientData] = await Promise.all([
         lockerResponse.json(),
         activityLogResponse.json(),
         recipientResponse.json(),
       ]);
-
+  
+      // Create a map of registered recipients by email for quick lookup
+      const recipientMap = new Map(
+        recipientData.map((recipient) => [recipient.email, recipient])
+      );
+  
+      // Filter lockers with unreceived activity logs
       const unreceivedLockers = lockerData.filter((locker) => {
         const logs = activityLogData.filter(
           (log) => log.lockerNumber === locker.number && !log.date_received
         );
         return logs.length > 0;
       });
-
+  
+      // Map lockers with details, including unregistered recipients
       const lockersWithDetails = unreceivedLockers.map((locker) => {
         const activityLog = activityLogData.find(
           (log) => log.lockerNumber === locker.number && !log.date_received
         );
         if (activityLog) {
-          const recipient = recipientData.find((rec) => rec.email === activityLog.recipientEmail);
+          const recipientEmail = activityLog.recipientEmail;
+          const recipient = recipientMap.get(recipientEmail);
           return {
             ...locker,
             status: 'Pending',
             assignedTo: recipient
-              ? { name: recipient.name, email: recipient.email, title: recipient.title }
-              : null,
+              ? {
+                  name: recipient.name,
+                  email: recipient.email,
+                  title: recipient.title,
+                }
+              : {
+                  name: recipientEmail, // Use email as name for unregistered recipients
+                  email: recipientEmail,
+                  title: '',
+                },
             image: recipient ? recipient.image : null,
           };
         }
         return { ...locker, status: 'Pending', assignedTo: null, image: null };
       });
-
+  
       setLockers(lockersWithDetails);
     } catch (err) {
       console.error('Error fetching unreceived lockers:', err);
