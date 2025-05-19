@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { config } from '../config.jsx';
-import { syncLeds } from './utils/ledSync'; // Import the syncLeds function
+import { syncLeds } from './ledSync.jsx'; // Import the syncLeds function
 
 export function useIdleTimeout() {
   const navigate = useNavigate();
