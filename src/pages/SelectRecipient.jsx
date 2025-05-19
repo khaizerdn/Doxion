@@ -15,38 +15,64 @@ const SelectRecipient = ({ onSelect, onBack }) => {
   const fetchRecipients = async () => {
     try {
       setLoading(true);
-      const recipientResponse = await fetch('http://localhost:5000/api/recipients');
-      if (!recipientResponse.ok) throw new Error('Failed to fetch recipients');
-      const recipientData = await recipientResponse.json();
-
-      const activityLogResponse = await fetch('http://localhost:5000/api/activitylogs');
+      // Fetch activity logs to get all recipient emails and their assigned lockers
+      const activityLogResponse = await fetch('http://127.0.0.1:5000/api/activitylogs');
       if (!activityLogResponse.ok) throw new Error('Failed to fetch activity logs');
       const activityLogData = await activityLogResponse.json();
-
-      // Create a list of items where each recipient-locker pair is a separate entry
+  
+      // Fetch registered recipients
+      const recipientResponse = await fetch('http://127.0.0.1:5000/api/recipients');
+      if (!recipientResponse.ok) throw new Error('Failed to fetch recipients');
+      const recipientData = await recipientResponse.json();
+  
+      // Create a map of registered recipients by email for quick lookup
+      const recipientMap = new Map(
+        recipientData.map((recipient) => [recipient.email, recipient])
+      );
+  
+      // Get unique recipient emails from activity logs
+      const uniqueRecipientEmails = [
+        ...new Set(activityLogData.map((log) => log.recipientEmail)),
+      ];
+  
+      // Create items list combining activity log and recipient data
       const items = [];
-      recipientData.forEach((recipient) => {
+      uniqueRecipientEmails.forEach((email) => {
+        // Filter logs for this recipient
         const recipientLogs = activityLogData.filter(
-          (log) => log.recipientEmail === recipient.email
+          (log) => log.recipientEmail === email
         );
-        const assignedLockers = [...new Set(recipientLogs.map((log) => log.lockerNumber))];
-
+        // Get unique lockers assigned to this recipient
+        const assignedLockers = [
+          ...new Set(recipientLogs.map((log) => log.lockerNumber)),
+        ];
+  
+        // Get recipient details from recipientMap or use defaults
+        const recipientInfo = recipientMap.get(email) || {
+          id: `temp-${email}`, // Temporary ID for unregistered recipients
+          email,
+          name: email, // Use email as name if not registered
+          title: '',
+          image: null,
+        };
+  
         if (assignedLockers.length > 0) {
+          // Create an item for each assigned locker
           assignedLockers.forEach((locker) => {
             items.push({
-              ...recipient,
-              assignedLocker: locker, // Single locker per item
+              ...recipientInfo,
+              assignedLocker: locker,
             });
           });
         } else {
-          // If no lockers, add the recipient once with no locker
+          // Add recipient with no locker
           items.push({
-            ...recipient,
+            ...recipientInfo,
             assignedLocker: null,
           });
         }
       });
-
+  
       setRecipientItems(items);
     } catch (err) {
       console.error('Error fetching recipients:', err);
