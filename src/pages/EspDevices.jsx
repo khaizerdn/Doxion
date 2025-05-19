@@ -53,7 +53,9 @@ function EspDevices() {
       const response = await fetch('http://localhost:5000/api/espdetected');
       if (!response.ok) throw new Error('Failed to fetch ESP devices');
       const data = await response.json();
-      setEspDevices(data);
+      // Sort devices by detected_at in descending order (latest first)
+      const sortedData = data.sort((a, b) => new Date(b.detected_at) - new Date(a.detected_at));
+      setEspDevices(sortedData);
     } catch (error) {
       console.error('Error fetching ESP devices:', error);
     }
