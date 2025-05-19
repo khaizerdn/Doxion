@@ -6,7 +6,7 @@ import Button from '../pages/components/Button';
 import SelectRecipient from './SelectRecipient';
 import SelectLocker from './SelectLocker';
 import { validateEmail, validateRequired, validateLockerNumber } from '../utils/validators';
-import { syncLeds } from '../utils/ledSync'; // Import syncLeds
+import { syncLeds } from '../utils/ledSync'; // Assuming this function is defined in ledSync.js
 
 // SVG Icons (unchanged)
 const SendMailIcon = () => (
@@ -142,20 +142,20 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     return Object.values(newErrors).every((error) => !error);
   };
 
-  const triggerLockerAndLed = async (ipAddress, lock, led) => {
+  const triggerLockerAndLed = async (ipAddress, lock, led, skipLock = false) => {
     try {
       const response = await fetch('http://127.0.0.1:5000/api/trigger-esp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ip_address: ipAddress, lock, led }),
+        body: JSON.stringify({ ip_address: ipAddress, lock, led, skipLock }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `Failed to trigger ESP at ${ipAddress}`);
       }
-  
-      console.log(`Successfully triggered ${lock} and set ${led} to HIGH at ${ipAddress}`);
+
+      console.log(`Successfully ${skipLock ? 'skipped lock and' : ''} triggered ${lock} and set ${led} at ${ipAddress}`);
     } catch (error) {
       console.error('Error triggering locker/LED:', error);
       throw error;
@@ -164,7 +164,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-  
+
     setSubmissionStatus('loading');
     try {
       // Step 1: Fetch locker details
@@ -176,7 +176,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       if (!selectedLocker) {
         throw new Error(`Locker ${formData.lockerNumber} not found`);
       }
-  
+
       // Step 2: Submit activity log
       const submissionData = {
         email: initialData.email || '',
@@ -185,34 +185,37 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         lockerNumber: formData.lockerNumber,
         date_received: null,
       };
-  
+
       const activityResponse = await fetch('http://127.0.0.1:5000/api/activitylogs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData),
       });
-  
+
       if (!activityResponse.ok) {
         const errorData = await activityResponse.json();
         throw new Error(errorData.error || 'Failed to submit activity log');
       }
-  
+
       const savedData = await activityResponse.json();
-  
-      // Step 3: Trigger locker and LED only if skipTrigger is false
+
+      // Step 3: Trigger locker and LED
       const { ip_address, locks, leds } = selectedLocker;
-      if (!savedData.skipTrigger && ip_address && locks && leds) {
-        await triggerLockerAndLed(ip_address, locks, leds);
+      if (ip_address && leds) {
+        // Skip lock trigger if skipTrigger is true, but always trigger LED
+        await triggerLockerAndLed(ip_address, locks, leds, savedData.skipTrigger);
         // Wait for 5 blinks (500ms on + 500ms off per blink, 5 blinks = 5000ms)
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
         // Sync LEDs after the blink delay
         await syncLeds();
-      } else if (savedData.skipTrigger) {
-        console.log('Skipping locker/LED trigger as locker is already assigned to the same recipient');
       } else {
-        console.warn('Locker missing ip_address, locks, or leds; skipping trigger');
+        console.warn('Locker missing ip_address or leds; skipping trigger');
       }
-  
+
+      if (savedData.skipTrigger) {
+        console.log('Skipped locker trigger as locker is already assigned to the same recipient');
+      }
+
       // Step 4: Mark as successful
       setSubmissionStatus('success');
       setTimeout(() => onNext({ ...formData, activity_log_id: savedData.id }), 10000);

@@ -4,6 +4,7 @@ import nodemailer from 'nodemailer';
 import cors from 'cors';
 import { Snowflake } from 'nodejs-snowflake';
 import mysql from 'mysql2/promise';
+import fetch from 'node-fetch';
 
 dotenv.config();
 
@@ -114,70 +115,72 @@ app.get('/api/espdetected', async (req, res) => {
 });
 
 app.post('/api/trigger-esp', async (req, res) => {
-    const { ip_address, lock, led, ledState = 'toggle' } = req.body;
-  
-    // Validate input
-    if (!ip_address || !lock || !led) {
-      return res.status(400).json({ error: 'ip_address, lock, and led are required' });
-    }
-    if (!['on', 'off', 'toggle'].includes(ledState)) {
-      return res.status(400).json({ error: 'ledState must be "on", "off", or "toggle"' });
-    }
-  
-    // Helper function to introduce delay
-    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  
-    try {
-      // Trigger the locker
+  const { ip_address, lock, led, ledState = 'toggle', skipLock = false } = req.body;
+
+  // Validate input
+  if (!ip_address || !led || (!skipLock && !lock)) {
+    return res.status(400).json({ error: 'ip_address, led, and lock (unless skipLock is true) are required' });
+  }
+  if (!['on', 'off', 'toggle'].includes(ledState)) {
+    return res.status(400).json({ error: 'ledState must be "on", "off", or "toggle"' });
+  }
+
+  // Helper function to introduce delay
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  try {
+    // Trigger the locker (unless skipLock is true)
+    if (!skipLock) {
       const lockUrl = `http://${ip_address}/${lock}`;
       const lockResponse = await fetch(lockUrl, { method: 'GET' });
       if (!lockResponse.ok) {
         throw new Error(`Failed to trigger locker at ${lockUrl}`);
       }
-  
-      // Blink LED 5 times (on-off pairs)
-      const blinkDelay = 500; // 500ms per state (on or off)
-      for (let i = 0; i < 5; i++) {
-        const ledOnUrl = `http://${ip_address}/${led}/on`;
-        const ledOffUrl = `http://${ip_address}/${led}/off`;
-  
-        // Turn LED on
-        const ledOnResponse = await fetch(ledOnUrl, { method: 'GET' });
-        if (!ledOnResponse.ok) {
-          throw new Error(`Failed to turn LED on at ${ledOnUrl}`);
-        }
-        await delay(blinkDelay);
-  
-        // Turn LED off
-        const ledOffResponse = await fetch(ledOffUrl, { method: 'GET' });
-        if (!ledOffResponse.ok) {
-          throw new Error(`Failed to turn LED off at ${ledOffUrl}`);
-        }
-        await delay(blinkDelay);
-      }
-  
-      // Set final LED state
-      let finalLedUrl;
-      if (ledState === 'on') {
-        finalLedUrl = `http://${ip_address}/${led}/on`;
-      } else if (ledState === 'off') {
-        finalLedUrl = `http://${ip_address}/${led}/off`;
-      } else {
-        // For 'toggle', assume we toggle from the last state (off after blinks)
-        finalLedUrl = `http://${ip_address}/${led}/on`; // Toggle to on
-      }
-  
-      const finalLedResponse = await fetch(finalLedUrl, { method: 'GET' });
-      if (!finalLedResponse.ok) {
-        throw new Error(`Failed to set final LED state at ${finalLedUrl}`);
-      }
-  
-      res.status(200).json({ message: 'Locker and LED triggered successfully with 5 blinks' });
-    } catch (error) {
-      console.error('Error triggering ESP:', error);
-      res.status(500).json({ error: 'Failed to trigger ESP', details: error.message });
     }
-  });
+
+    // Blink LED 5 times (on-off pairs)
+    const blinkDelay = 500; // 500ms per state (on or off)
+    for (let i = 0; i < 5; i++) {
+      const ledOnUrl = `http://${ip_address}/${led}/on`;
+      const ledOffUrl = `http://${ip_address}/${led}/off`;
+
+      // Turn LED on
+      const ledOnResponse = await fetch(ledOnUrl, { method: 'GET' });
+      if (!ledOnResponse.ok) {
+        throw new Error(`Failed to turn LED on at ${ledOnUrl}`);
+      }
+      await delay(blinkDelay);
+
+      // Turn LED off
+      const ledOffResponse = await fetch(ledOffUrl, { method: 'GET' });
+      if (!ledOffResponse.ok) {
+        throw new Error(`Failed to turn LED off at ${ledOffUrl}`);
+      }
+      await delay(blinkDelay);
+    }
+
+    // Set final LED state
+    let finalLedUrl;
+    if (ledState === 'on') {
+      finalLedUrl = `http://${ip_address}/${led}/on`;
+    } else if (ledState === 'off') {
+      finalLedUrl = `http://${ip_address}/${led}/off`;
+    } else {
+      // For 'toggle', assume we toggle from the last state (off after blinks)
+      finalLedUrl = `http://${ip_address}/${led}/on`; // Toggle to on
+    }
+
+    const finalLedResponse = await fetch(finalLedUrl, { method: 'GET' });
+    if (!finalLedResponse.ok) {
+      throw new Error(`Failed to set final LED state at ${finalLedUrl}`);
+    }
+
+    res.status(200).json({ message: `Locker ${skipLock ? 'skipped and ' : ''}LED triggered successfully with 5 blinks` });
+  } catch (error) {
+    console.error('Error triggering ESP:', error);
+    res.status(500).json({ error: 'Failed to trigger ESP', details: error.message });
+  }
+});
 
 // Send OTP
 app.post('/api/send-otp', async (req, res) => {
