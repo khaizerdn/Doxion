@@ -58,6 +58,39 @@ const GlobalKeyboardProvider = () => {
     }
   };
 
+  const focusNextInput = (currentInput) => {
+    // Get all focusable input and textarea elements in the DOM
+    const focusableElements = Array.from(
+      document.querySelectorAll('input, textarea')
+    ).filter((el) => !el.disabled && !el.readOnly);
+
+    // Find the index of the current input
+    const currentIndex = focusableElements.indexOf(currentInput);
+
+    // Move to the next input, if it exists
+    if (currentIndex !== -1 && currentIndex < focusableElements.length - 1) {
+      const nextInput = focusableElements[currentIndex + 1];
+      nextInput.focus();
+      setInputElement(nextInput);
+
+      // Calculate scroll position to keep input at top (40% screen visible)
+      const keyboardHeight = wrapperRef.current ? wrapperRef.current.offsetHeight : 280; // Fallback to minHeight
+      const viewportHeight = window.innerHeight;
+      const visibleHeight = viewportHeight - keyboardHeight;
+      const targetScrollY = nextInput.getBoundingClientRect().top + window.scrollY - (0.4 * visibleHeight);
+
+      window.scrollTo({
+        top: targetScrollY,
+        behavior: 'smooth',
+      });
+
+      // Ensure horizontal scroll for latest character
+      nextInput.scrollLeft = nextInput.scrollWidth;
+      return true;
+    }
+    return false;
+  };
+
   const onKeyPress = (button) => {
     if (!inputElement) return;
 
@@ -80,7 +113,10 @@ const GlobalKeyboardProvider = () => {
         setLayout('default');
         break;
       case '{done}':
-        setInputElement(null);
+        // Try to focus the next input; if none, hide keyboard
+        if (!focusNextInput(inputElement)) {
+          setInputElement(null);
+        }
         break;
       default:
         insertTextAtCursor(inputElement, button);
@@ -94,6 +130,17 @@ const GlobalKeyboardProvider = () => {
       if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
         setInputElement(el);
         setLayout('default');
+        // Scroll to keep input visible when focused
+        const keyboardHeight = wrapperRef.current ? wrapperRef.current.offsetHeight : 280;
+        const viewportHeight = window.innerHeight;
+        const visibleHeight = viewportHeight - keyboardHeight;
+        const targetScrollY = el.getBoundingClientRect().top + window.scrollY - (0.4 * visibleHeight);
+
+        window.scrollTo({
+          top: targetScrollY,
+          behavior: 'smooth',
+        });
+        el.scrollLeft = el.scrollWidth;
       }
     };
 
