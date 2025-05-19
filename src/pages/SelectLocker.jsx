@@ -15,28 +15,47 @@ const SelectLocker = ({ onSelect, onBack }) => {
   const fetchLockers = async () => {
     try {
       setLoading(true);
+      // Fetch lockers
       const lockerResponse = await fetch('http://localhost:5000/api/lockers');
       if (!lockerResponse.ok) throw new Error('Failed to fetch lockers');
       const lockerData = await lockerResponse.json();
-
+  
+      // Fetch activity logs to get locker assignments
       const activityLogResponse = await fetch('http://localhost:5000/api/activitylogs');
       if (!activityLogResponse.ok) throw new Error('Failed to fetch activity logs');
       const activityLogData = await activityLogResponse.json();
-
+  
+      // Fetch registered recipients
       const recipientResponse = await fetch('http://localhost:5000/api/recipients');
       if (!recipientResponse.ok) throw new Error('Failed to fetch recipients');
       const recipientData = await recipientResponse.json();
-
+  
+      // Create a map of registered recipients by email for quick lookup
+      const recipientMap = new Map(
+        recipientData.map((recipient) => [recipient.email, recipient])
+      );
+  
+      // Map lockers with their assignment status
       const lockersWithAssignments = lockerData.map((locker) => {
+        // Find the most recent activity log for this locker (if any)
         const activityLog = activityLogData.find((log) => log.lockerNumber === locker.number);
         if (activityLog) {
-          const recipient = recipientData.find((rec) => rec.email === activityLog.recipientEmail);
+          const recipientEmail = activityLog.recipientEmail;
+          const recipient = recipientMap.get(recipientEmail);
           return {
             ...locker,
             status: 'Occupied',
             assignedTo: recipient
-              ? { name: recipient.name, email: recipient.email, title: recipient.title }
-              : null,
+              ? {
+                  name: recipient.name,
+                  email: recipient.email,
+                  title: recipient.title,
+                }
+              : {
+                  name: recipientEmail, // Use email as name for unregistered recipients
+                  email: recipientEmail,
+                  title: 'Unregistered Recipient',
+                },
             image: recipient ? recipient.image : null,
           };
         }
@@ -47,7 +66,7 @@ const SelectLocker = ({ onSelect, onBack }) => {
           image: null,
         };
       });
-
+  
       setLockers(lockersWithAssignments);
     } catch (err) {
       console.error('Error fetching lockers:', err);
