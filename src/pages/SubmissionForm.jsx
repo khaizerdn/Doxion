@@ -343,7 +343,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       <div className="status-container">
         <style>{styles}</style>
         <SuccessIcon />
-        <h2>Successful Submission</h2>
+        <h2>Insert Document in Locker {formData.lockerNumber}</h2>
         <p>{getRandomSuccessMessage(formData.lockerNumber)}</p>
       </div>
     );
