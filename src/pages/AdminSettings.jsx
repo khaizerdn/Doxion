@@ -5,7 +5,7 @@ import Input from './components/Input';
 import Lottie from 'react-lottie-player';
 import searchDocuAnimationData from '../assets/SearchDocuAnimation.json';
 import BackButton from './components/BackButton';
-import useKeyboardPadding from '../utils/useKeyboardPadding'; // Import the hook
+import useKeyboardPadding from '../utils/useKeyboardPadding';
 
 // Success SVG Icon
 const SuccessIcon = () => (
@@ -170,7 +170,7 @@ const AdminSettings = () => {
     const inputRefs = useRef([]);
     const navigate = useNavigate();
 
-    useKeyboardPadding('.main-container-two'); // Apply padding for main-container-two
+    useKeyboardPadding('.main-container-two');
 
     useEffect(() => {
         if (step === 'input') {
@@ -181,8 +181,8 @@ const AdminSettings = () => {
     useEffect(() => {
         if (step === 'success') {
             const timer = setTimeout(() => {
-                navigate('/adminpanel');
-            }, 3000); // 3 seconds delay to show success message
+                navigate('/adminpanel', { replace: true }); // Replace history entry
+            }, 3000);
             return () => clearTimeout(timer);
         }
     }, [step, navigate]);
