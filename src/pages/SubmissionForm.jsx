@@ -341,7 +341,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         <style>{styles}</style>
         <LoadingIcon />
         <h2>Processing Submission</h2>
-        <p>Organizing your documents and triggering locker...</p>
+        <p>Organizing your documents and searching for locker...</p>
       </div>
     );
   }
