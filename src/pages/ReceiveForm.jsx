@@ -5,6 +5,7 @@ import Lottie from 'react-lottie';
 import searchDocuAnimationData from '../assets/SearchDocuAnimation.json';
 import SelectUnreceivedLocker from './SelectUnreceivedLocker';
 import useKeyboardPadding from '../utils/useKeyboardPadding';
+import { syncLeds } from '../utils/ledSync'; // Import syncLeds
 
 // Locker SVG Icon
 const LockerIcon = () => (
@@ -182,6 +183,10 @@ const ReceiveForm = ({ onClose }) => {
       const { ip_address, locks, leds } = selectedLocker;
       if (ip_address && locks && leds) {
         await triggerLockerAndLed(ip_address, locks, leds);
+        // Wait for 5 blinks (500ms on + 500ms off per blink, 5 blinks = 5000ms)
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Sync LEDs after the blink delay
+        await syncLeds();
       } else {
         console.warn('Locker missing ip_address, locks, or leds; skipping trigger');
       }

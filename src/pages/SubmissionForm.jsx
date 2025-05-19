@@ -6,6 +6,7 @@ import Button from '../pages/components/Button';
 import SelectRecipient from './SelectRecipient';
 import SelectLocker from './SelectLocker';
 import { validateEmail, validateRequired, validateLockerNumber } from '../utils/validators';
+import { syncLeds } from '../utils/ledSync'; // Import syncLeds
 
 // SVG Icons (unchanged)
 const SendMailIcon = () => (
@@ -202,6 +203,10 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       const { ip_address, locks, leds } = selectedLocker;
       if (!savedData.skipTrigger && ip_address && locks && leds) {
         await triggerLockerAndLed(ip_address, locks, leds);
+        // Wait for 5 blinks (500ms on + 500ms off per blink, 5 blinks = 5000ms)
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Sync LEDs after the blink delay
+        await syncLeds();
       } else if (savedData.skipTrigger) {
         console.log('Skipping locker/LED trigger as locker is already assigned to the same recipient');
       } else {
