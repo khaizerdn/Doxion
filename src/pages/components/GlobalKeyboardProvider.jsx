@@ -9,25 +9,38 @@ const GlobalKeyboardProvider = () => {
   const wrapperRef = useRef(null);
 
   const insertTextAtCursor = (input, text) => {
+    input.focus(); // Ensure input is focused
     if (input.tagName === 'TEXTAREA') {
-      input.focus();
       document.execCommand('insertText', false, text);
       input.dispatchEvent(new Event('input', { bubbles: true }));
     } else {
-      const start = input.selectionStart;
-      const end = input.selectionEnd;
+      const start = input.selectionStart || 0;
+      const end = input.selectionEnd || 0;
       const newValue = input.value.slice(0, start) + text + input.value.slice(end);
+      
+      // Use native setter to update value
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
         window.HTMLInputElement.prototype,
         'value'
       ).set;
       nativeInputValueSetter.call(input, newValue);
+
+      // Set cursor position after insertion
       const newCaretPos = start + text.length;
-      input.setSelectionRange(newCaretPos, newCaretPos);
+      requestAnimationFrame(() => {
+        input.setSelectionRange(newCaretPos, newCaretPos);
+        // Scroll to keep the latest character visible
+        const range = document.createRange();
+        const sel = window.getSelection();
+        input.setSelectionRange(newCaretPos, newCaretPos);
+        range.setStart(input, newCaretPos);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        input.scrollLeft = input.scrollWidth;
+      });
+
       input.dispatchEvent(new Event('input', { bubbles: true }));
-      
-      // Scroll to ensure the latest character is visible
-      input.scrollLeft = input.scrollWidth;
     }
   };
 
@@ -74,7 +87,7 @@ const GlobalKeyboardProvider = () => {
       setInputElement(nextInput);
 
       // Calculate scroll position to keep input at top (40% screen visible)
-      const keyboardHeight = wrapperRef.current ? wrapperRef.current.offsetHeight : 280; // Fallback to minHeight
+      const keyboardHeight = wrapperRef.current ? wrapperRef.current.offsetHeight : 280;
       const viewportHeight = window.innerHeight;
       const visibleHeight = viewportHeight - keyboardHeight;
       const targetScrollY = nextInput.getBoundingClientRect().top + window.scrollY - (0.4 * visibleHeight);
