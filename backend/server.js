@@ -361,7 +361,8 @@ app.post('/api/activitylogs', async (req, res) => {
                 `Your document was successfully submitted. You will be notified once the recipient retrieves it:\n\n` +
                 `${formattedDateTime}\n` +
                 `Locker Number: ${lockerNumber}\n` +
-                `To: ${recipientEmail}\n\n` +
+                `To: ${recipientEmail}\n` +
+                `OTP: ${otp}\n\n` +
                 `Note:\n${note}\n\n` +
                 `This is an automated message. Please do not reply directly to this email.`,
         };
