@@ -15,7 +15,7 @@ const SelectRecipient = ({ onSelect, onBack }) => {
   const fetchRecipients = async () => {
     try {
       setLoading(true);
-      // Fetch activity logs to get all recipient emails and their assigned lockers
+      // Fetch activity logs to get recipient emails and their assigned lockers
       const activityLogResponse = await fetch('http://127.0.0.1:5000/api/activitylogs');
       if (!activityLogResponse.ok) throw new Error('Failed to fetch activity logs');
       const activityLogData = await activityLogResponse.json();
@@ -30,48 +30,76 @@ const SelectRecipient = ({ onSelect, onBack }) => {
         recipientData.map((recipient) => [recipient.email, recipient])
       );
   
-      // Get unique recipient emails from activity logs
-      const uniqueRecipientEmails = [
-        ...new Set(activityLogData.map((log) => log.recipientEmail)),
-      ];
+      // Filter activity logs to only unreceived (occupied) logs
+      const unreceivedLogs = activityLogData.filter((log) => !log.date_received);
   
-      // Create items list combining activity log and recipient data
-      const items = [];
-      uniqueRecipientEmails.forEach((email) => {
-        // Filter logs for this recipient
-        const recipientLogs = activityLogData.filter(
-          (log) => log.recipientEmail === email
-        );
-        // Get unique lockers assigned to this recipient
-        const assignedLockers = [
-          ...new Set(recipientLogs.map((log) => log.lockerNumber)),
-        ];
+      // Create a map of recipient emails to their assigned lockers (unreceived only)
+      const lockerAssignments = new Map();
+      unreceivedLogs.forEach((log) => {
+        const email = log.recipientEmail;
+        if (!lockerAssignments.has(email)) {
+          lockerAssignments.set(email, new Set());
+        }
+        lockerAssignments.get(email).add(log.lockerNumber);
+      });
   
-        // Get recipient details from recipientMap or use defaults
-        const recipientInfo = recipientMap.get(email) || {
-          id: `temp-${email}`, // Temporary ID for unregistered recipients
-          email,
-          name: email, // Use email as name if not registered
-          title: '',
-          image: null,
-        };
+      // Create items list, separating assigned and unassigned recipients
+      const assignedItems = [];
+      const unassignedItems = [];
   
-        if (assignedLockers.length > 0) {
-          // Create an item for each assigned locker
+      // Process all registered recipients
+      recipientData.forEach((recipient) => {
+        const assignedLockers = lockerAssignments.get(recipient.email) || new Set();
+        if (assignedLockers.size > 0) {
+          // Add an item for each assigned locker to assignedItems
           assignedLockers.forEach((locker) => {
-            items.push({
-              ...recipientInfo,
+            assignedItems.push({
+              ...recipient,
               assignedLocker: locker,
             });
           });
         } else {
-          // Add recipient with no locker
-          items.push({
-            ...recipientInfo,
+          // Add to unassignedItems if no lockers
+          unassignedItems.push({
+            ...recipient,
             assignedLocker: null,
           });
         }
       });
+  
+      // Process unregistered recipients from unreceived activity logs
+      const unregisteredEmails = [...new Set(unreceivedLogs.map((log) => log.recipientEmail))].filter(
+        (email) => !recipientMap.has(email)
+      );
+      unregisteredEmails.forEach((email) => {
+        const assignedLockers = lockerAssignments.get(email) || new Set();
+        if (assignedLockers.size > 0) {
+          // Add an item for each assigned locker to assignedItems
+          assignedLockers.forEach((locker) => {
+            assignedItems.push({
+              id: `temp-${email}`,
+              email,
+              name: email,
+              title: 'Unregistered Recipient',
+              image: null,
+              assignedLocker: locker,
+            });
+          });
+        } else {
+          // Add to unassignedItems if no lockers (unlikely but included)
+          unassignedItems.push({
+            id: `temp-${email}`,
+            email,
+            name: email,
+            title: 'Unregistered Recipient',
+            image: null,
+            assignedLocker: null,
+          });
+        }
+      });
+  
+      // Combine lists: assigned recipients first, then unassigned
+      const items = [...assignedItems, ...unassignedItems];
   
       setRecipientItems(items);
     } catch (err) {
