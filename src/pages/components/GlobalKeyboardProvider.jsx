@@ -25,6 +25,9 @@ const GlobalKeyboardProvider = () => {
       const newCaretPos = start + text.length;
       input.setSelectionRange(newCaretPos, newCaretPos);
       input.dispatchEvent(new Event('input', { bubbles: true }));
+      
+      // Scroll to ensure the latest character is visible
+      input.scrollLeft = input.scrollWidth;
     }
   };
 
