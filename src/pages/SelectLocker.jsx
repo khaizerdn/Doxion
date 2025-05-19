@@ -40,6 +40,17 @@ const SelectLocker = ({ onSelect, onBack }) => {
         // Find the most recent activity log for this locker (if any)
         const activityLog = activityLogData.find((log) => log.lockerNumber === locker.number);
         if (activityLog) {
+          // Check if the document has been retrieved
+          if (activityLog.date_received) {
+            // Locker is unassigned if document has been retrieved
+            return {
+              ...locker,
+              status: 'Unassigned',
+              assignedTo: null,
+              image: null,
+            };
+          }
+          // Locker is occupied if document is not yet retrieved
           const recipientEmail = activityLog.recipientEmail;
           const recipient = recipientMap.get(recipientEmail);
           return {
@@ -59,6 +70,7 @@ const SelectLocker = ({ onSelect, onBack }) => {
             image: recipient ? recipient.image : null,
           };
         }
+        // No activity log means the locker is available
         return {
           ...locker,
           status: 'Available',

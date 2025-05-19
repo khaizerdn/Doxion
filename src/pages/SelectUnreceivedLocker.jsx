@@ -157,18 +157,21 @@ const SelectUnreceivedLocker = ({ onSelect, onBack }) => {
         recipientData.map((recipient) => [recipient.email, recipient])
       );
   
-      // Filter lockers with unreceived activity logs
-      const unreceivedLockers = lockerData.filter((locker) => {
-        const logs = activityLogData.filter(
-          (log) => log.lockerNumber === locker.number && !log.date_received
-        );
-        return logs.length > 0;
-      });
+      // Filter activity logs to only those that are unreceived (occupied)
+      const unreceivedLogs = activityLogData.filter((log) => !log.date_received);
+  
+      // Create a set of occupied locker numbers
+      const occupiedLockerNumbers = new Set(unreceivedLogs.map((log) => log.lockerNumber));
+  
+      // Filter lockers to only those that are occupied
+      const unreceivedLockers = lockerData.filter((locker) =>
+        occupiedLockerNumbers.has(locker.number)
+      );
   
       // Map lockers with details, including unregistered recipients
       const lockersWithDetails = unreceivedLockers.map((locker) => {
-        const activityLog = activityLogData.find(
-          (log) => log.lockerNumber === locker.number && !log.date_received
+        const activityLog = unreceivedLogs.find(
+          (log) => log.lockerNumber === locker.number
         );
         if (activityLog) {
           const recipientEmail = activityLog.recipientEmail;
@@ -180,7 +183,7 @@ const SelectUnreceivedLocker = ({ onSelect, onBack }) => {
               ? {
                   name: recipient.name,
                   email: recipient.email,
-                  title: recipient.title,
+                  title: '',
                 }
               : {
                   name: recipientEmail, // Use email as name for unregistered recipients
@@ -190,7 +193,13 @@ const SelectUnreceivedLocker = ({ onSelect, onBack }) => {
             image: recipient ? recipient.image : null,
           };
         }
-        return { ...locker, status: 'Pending', assignedTo: null, image: null };
+        // Fallback for unexpected cases (should not occur due to filter)
+        return {
+          ...locker,
+          status: 'Pending',
+          assignedTo: null,
+          image: null,
+        };
       });
   
       setLockers(lockersWithDetails);
