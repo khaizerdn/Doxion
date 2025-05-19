@@ -319,11 +319,30 @@ app.post('/api/activitylogs', async (req, res) => {
     const otp = generateOTP();
   
     try {
+      // Verify locker exists
       const [lockerRows] = await pool.execute('SELECT number FROM lockers WHERE number = ?', [lockerNumber]);
       if (lockerRows.length === 0) {
         return res.status(404).json({ error: 'Locker number does not exist' });
       }
   
+      // Check if locker is occupied (has unclaimed activity logs)
+      const [existingLogs] = await pool.execute(
+        'SELECT recipientEmail FROM activitylogs WHERE lockerNumber = ? AND date_received IS NULL LIMIT 1',
+        [lockerNumber]
+      );
+  
+      let skipTrigger = false;
+      if (existingLogs.length > 0) {
+        // Locker is occupied
+        if (existingLogs[0].recipientEmail !== recipientEmail) {
+          // Different recipient trying to use occupied locker
+          return res.status(409).json({ error: `Locker ${lockerNumber} is occupied by another recipient` });
+        }
+        // Same recipient, allow submission without triggering locker/LED
+        skipTrigger = true;
+      }
+  
+      // Insert new activity log
       const [result] = await pool.execute(
         'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, otp, date_received) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [id, email, recipientEmail, note, lockerNumber, otp, date_received || null]
@@ -383,6 +402,7 @@ app.post('/api/activitylogs', async (req, res) => {
           lockerNumber,
           date_received: date_received || null,
           created_at: new Date().toISOString(),
+          skipTrigger, // Indicate whether to skip locker/LED trigger
         });
       } else {
         throw new Error('Failed to insert activity log');

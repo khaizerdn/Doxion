@@ -148,12 +148,12 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ip_address: ipAddress, lock, led }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `Failed to trigger ESP at ${ipAddress}`);
       }
-
+  
       console.log(`Successfully triggered ${lock} and set ${led} to HIGH at ${ipAddress}`);
     } catch (error) {
       console.error('Error triggering locker/LED:', error);
@@ -198,10 +198,12 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
   
       const savedData = await activityResponse.json();
   
-      // Step 3: Trigger locker and LED
+      // Step 3: Trigger locker and LED only if skipTrigger is false
       const { ip_address, locks, leds } = selectedLocker;
-      if (ip_address && locks && leds) {
+      if (!savedData.skipTrigger && ip_address && locks && leds) {
         await triggerLockerAndLed(ip_address, locks, leds);
+      } else if (savedData.skipTrigger) {
+        console.log('Skipping locker/LED trigger as locker is already assigned to the same recipient');
       } else {
         console.warn('Locker missing ip_address, locks, or leds; skipping trigger');
       }
