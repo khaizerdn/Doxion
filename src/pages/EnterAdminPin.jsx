@@ -137,7 +137,7 @@ const EnterAdminPin = ({ onSuccess, onClose }) => {
                             {pin.map((digit, index) => (
                                 <input
                                     key={index}
-                                    type="text"
+                                    type="password"
                                     className={`pin-input ${pinError ? 'pin-input-error' : ''}`}
                                     value={digit}
                                     onChange={(e) => handleChange(index, e.target.value)}

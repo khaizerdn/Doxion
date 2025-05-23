@@ -486,7 +486,7 @@ const AdminSettings = () => {
                         {formData.pin.map((digit, index) => (
                             <input
                                 key={index}
-                                type="text"
+                                type="password"
                                 className="pin-input"
                                 value={digit}
                                 onChange={(e) => handlePinChange(index, e.target.value)}
