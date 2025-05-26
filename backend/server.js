@@ -106,7 +106,7 @@ app.post('/api/espdetected', async (req, res) => {
 // Get all ESP detected logs
 app.get('/api/espdetected', async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT id, device_name, ip_address, locks, leds, detected_at FROM espdetected_logs');
+        const [rows] = await pool.execute('SELECT id, device_name, ip_address, locks, leds, detected_at FROM espdetected_logs ORDER BY detected_at DESC');
         console.log('Fetched ESP devices:', rows);
         res.json(rows);
     } catch (error) {

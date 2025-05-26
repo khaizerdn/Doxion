@@ -9,39 +9,31 @@ const GlobalKeyboardProvider = () => {
   const wrapperRef = useRef(null);
 
   const insertTextAtCursor = (input, text) => {
-    input.focus(); // Ensure input is focused
-    if (input.tagName === 'TEXTAREA') {
-      document.execCommand('insertText', false, text);
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    } else {
-      const start = input.selectionStart || 0;
-      const end = input.selectionEnd || 0;
-      const newValue = input.value.slice(0, start) + text + input.value.slice(end);
-      
-      // Use native setter to update value
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        'value'
-      ).set;
-      nativeInputValueSetter.call(input, newValue);
-
-      // Set cursor position after insertion
-      const newCaretPos = start + text.length;
-      requestAnimationFrame(() => {
-        input.setSelectionRange(newCaretPos, newCaretPos);
-        // Scroll to keep the latest character visible
-        const range = document.createRange();
-        const sel = window.getSelection();
-        input.setSelectionRange(newCaretPos, newCaretPos);
-        range.setStart(input, newCaretPos);
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
-        input.scrollLeft = input.scrollWidth;
-      });
-
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+    input.focus();
+    const start = input.selectionStart || 0;
+    const end = input.selectionEnd || 0;
+    const newValue = input.value.slice(0, start) + text + input.value.slice(end);
+  
+    // Update value
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    ).set;
+    nativeInputValueSetter.call(input, newValue);
+  
+    // Set cursor and scroll to keep it visible
+    const newCaretPos = start + text.length;
+    requestAnimationFrame(() => {
+      input.setSelectionRange(newCaretPos, newCaretPos);
+      // Scroll to cursor position
+      if (input.scrollWidth > input.clientWidth) {
+        const charWidth = input.scrollWidth / input.value.length;
+        const scrollOffset = newCaretPos * charWidth - input.clientWidth + charWidth;
+        input.scrollLeft = Math.max(0, scrollOffset);
+      }
+    });
+  
+    input.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
   const deleteTextAtCursor = (input) => {
