@@ -5,8 +5,11 @@ import Input from './components/Input';
 import { validateRequired } from '../utils/validators';
 import useKeyboardPadding from '../utils/useKeyboardPadding';
 
-const LockerItem = ({ item, onEdit }) => {
+const LockerItem = ({ item, onEdit, espDevices }) => {
   const [isHovered, setIsHovered] = useState(false);
+
+  // Find the associated ESP device using the locks field
+  const associatedEsp = item.locks && espDevices.find((esp) => esp.locks === item.locks);
 
   if (item.isAdd) {
     return (
@@ -58,6 +61,9 @@ const LockerItem = ({ item, onEdit }) => {
         <span style={{ fontSize: '1.625rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>
           {item.locks ? `${item.locks.replace('Lock', 'Lock ')} - ${item.ip_address || 'No IP'}` : 'No ESP Assigned'}
         </span>
+        <span style={{ fontSize: '1.625rem', textAlign: 'left', color: 'var(--color-muted-dark)', lineHeight: '1.2' }}>
+          Last Detected: {associatedEsp ? new Date(associatedEsp.detected_at).toLocaleString() : 'N/A'}
+        </span>
       </div>
     </li>
   );
@@ -106,9 +112,9 @@ const EspDeviceItem = ({ item, onSelect }) => {
 function Lockers() {
   useKeyboardPadding('.main-container-two');
   const [lockers, setLockers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(''); // State for search term
+  const [searchTerm, setSearchTerm] = useState('');
   const [espDevices, setEspDevices] = useState([]);
-  const [view, setView] = useState('lockers'); // 'lockers', 'form', or 'esp'
+  const [view, setView] = useState('lockers');
   const [formData, setFormData] = useState({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
   const [errors, setErrors] = useState({ number: '', device: '' });
   const [loading, setLoading] = useState(false);
@@ -124,7 +130,7 @@ function Lockers() {
       const response = await fetch('http://localhost:5000/api/lockers');
       if (!response.ok) throw new Error('Failed to fetch lockers');
       const data = await response.json();
-      setLockers(data); // Data is already sorted by created_at DESC from the backend
+      setLockers(data);
     } catch (error) {
       console.error('Error fetching lockers:', error);
     }
@@ -135,18 +141,18 @@ function Lockers() {
       const response = await fetch('http://localhost:5000/api/espdetected');
       if (!response.ok) throw new Error('Failed to fetch ESP devices');
       const data = await response.json();
-      setEspDevices(data);
+      // Sort devices by detected_at in ascending order (oldest first)
+      const sortedData = data.sort((a, b) => new Date(a.detected_at) - new Date(b.detected_at));
+      setEspDevices(sortedData);
     } catch (error) {
       console.error('Error fetching ESP devices:', error);
     }
   };
 
-  // Filter lockers based on search term (case-insensitive)
   const filteredLockers = lockers.filter((locker) =>
     locker.number.toString().toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Ensure the "Add Locker" button stays at the top, followed by filtered lockers
   const listItems = [
     { id: 'add', name: 'Add Locker', isAdd: true },
     ...filteredLockers.map((locker) => ({ ...locker, isAdd: false })),
@@ -183,7 +189,6 @@ function Lockers() {
       device: '',
     };
 
-    // Check for duplicate device (device_name, ip_address, locks)
     if (formData.device_name && formData.ip_address && formData.locks) {
       const isDuplicate = lockers.some(
         (locker) =>
@@ -220,7 +225,7 @@ function Lockers() {
         body: JSON.stringify(body),
       });
       if (response.ok) {
-        await fetchLockers(); // Refresh the list to maintain sort order
+        await fetchLockers();
         setFormData({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
         setView('lockers');
       } else {
@@ -240,7 +245,7 @@ function Lockers() {
     try {
       const response = await fetch(`http://localhost:5000/api/lockers/${formData.id}`, { method: 'DELETE' });
       if (response.ok) {
-        await fetchLockers(); // Refresh the list to maintain sort order
+        await fetchLockers();
         setFormData({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
         setView('lockers');
       } else {
@@ -321,8 +326,8 @@ function Lockers() {
     .search-bar.input-field {
       height: 100px;
       width: 400px;
-      padding: 10px 20px; /* Adjust padding for better text alignment */
-      font-size: 1.5rem; /* Adjust font size to fit the new height */
+      padding: 10px 20px;
+      font-size: 1.5rem;
     }
   `;
 
@@ -391,7 +396,7 @@ function Lockers() {
           <div style={{ width: '100%' }}>
             <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', width: '100%' }}>
               {listItems.map((item) => (
-                <LockerItem key={item.id} item={item} onEdit={handleEdit} />
+                <LockerItem key={item.id} item={item} onEdit={handleEdit} espDevices={espDevices} />
               ))}
             </ul>
           </div>
