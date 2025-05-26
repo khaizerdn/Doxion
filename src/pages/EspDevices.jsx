@@ -54,7 +54,7 @@ function EspDevices() {
       if (!response.ok) throw new Error('Failed to fetch ESP devices');
       const data = await response.json();
       // Sort devices by detected_at in ascending order (oldest first)
-      const sortedData = data.sort((a, b) => new Date(a.detected_at) - new Date(b.detected_at));
+      const sortedData = data.sort((b, a) => new Date(a.detected_at) - new Date(b.detected_at));
       setEspDevices(sortedData);
     } catch (error) {
       console.error('Error fetching ESP devices:', error);
