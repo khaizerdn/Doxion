@@ -5,7 +5,11 @@ import Lottie from 'react-lottie';
 import searchDocuAnimationData from '../assets/SearchDocuAnimation.json';
 import SelectUnreceivedLocker from './SelectUnreceivedLocker';
 import useKeyboardPadding from '../utils/useKeyboardPadding';
-import { syncLeds } from '../utils/ledSync'; // Import syncLeds
+import { syncLeds } from '../utils/ledSync';
+
+// Constants
+const API_BASE_URL = 'http://localhost:5000';
+const BLINK_DURATION = 5000; // 5 blinks at 500ms on + 500ms off
 
 // Locker SVG Icon
 const LockerIcon = () => (
@@ -60,7 +64,7 @@ const getRandomSuccessMessage = (lockerNumber) => {
     `You may now retrieve the documents in locker ${lockerNumber}! I hope it doesn't make you angry after reading it... 😨`,
     `You may now retrieve the documents in locker ${lockerNumber}! Wishing they don’t make you feel sad after reading it... 😢`,
     `You may now retrieve the documents in locker ${lockerNumber}! Prepare to be amazed after reading it 😮`,
-    `You may now retrieve the documents in locker ${lockerNumber}! Maybe they’ll make you laugh after reading it 😂`,
+    `You may now retrieve the documents inก่อนหน้านี้ ${lockerNumber}! Maybe they’ll make you laugh after reading it 😂`,
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 };
@@ -125,7 +129,7 @@ const ReceiveForm = ({ onClose }) => {
 
   const triggerLockerAndLed = async (ipAddress, lock, led) => {
     try {
-      const response = await fetch('http://localhost:5000/api/trigger-esp', {
+      const response = await fetch(`${API_BASE_URL}/api/trigger-esp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ip_address: ipAddress, lock, led }),
@@ -139,7 +143,7 @@ const ReceiveForm = ({ onClose }) => {
       console.log(`Successfully triggered ${lock} and turned off ${led} at ${ipAddress}`);
     } catch (error) {
       console.error('Error triggering locker/LED:', error);
-      throw error;
+      // Do not throw; allow UI to remain in success state
     }
   };
 
@@ -154,7 +158,7 @@ const ReceiveForm = ({ onClose }) => {
         otp: formData.pin.join(''),
       };
 
-      const receiveResponse = await fetch('http://localhost:5000/api/receive', {
+      const receiveResponse = await fetch(`${API_BASE_URL}/api/receive`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData),
@@ -169,30 +173,37 @@ const ReceiveForm = ({ onClose }) => {
 
       await receiveResponse.json();
 
-      // Step 2: Fetch locker details
-      const lockerResponse = await fetch('http://localhost:5000/api/lockers');
-      if (!lockerResponse.ok) throw new Error('Failed to fetch lockers');
-      const lockers = await lockerResponse.json();
-      
-      const selectedLocker = lockers.find((locker) => locker.number === formData.lockerNumber);
-      if (!selectedLocker) {
-        throw new Error(`Locker ${formData.lockerNumber} not found`);
-      }
-
-      // Step 3: Trigger locker and turn off LED
-      const { ip_address, locks, leds } = selectedLocker;
-      if (ip_address && locks && leds) {
-        await triggerLockerAndLed(ip_address, locks, leds);
-        // Wait for 5 blinks (500ms on + 500ms off per blink, 5 blinks = 5000ms)
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        // Sync LEDs after the blink delay
-        await syncLeds();
-      } else {
-        console.warn('Locker missing ip_address, locks, or leds; skipping trigger');
-      }
-
-      // Step 4: Mark as successful
+      // Step 2: Transition to success state immediately
       setStatus('success');
+
+      // Step 3: Fetch locker details and trigger locker/LED in the background
+      const lockerResponse = await fetch(`${API_BASE_URL}/api/lockers`);
+      if (!lockerResponse.ok) {
+        console.error('Failed to fetch lockers:', lockerResponse.status);
+        // Log error but do not affect success state
+      } else {
+        const lockers = await lockerResponse.json();
+        const selectedLocker = lockers.find((locker) => locker.number === formData.lockerNumber);
+        if (!selectedLocker) {
+          console.error(`Locker ${formData.lockerNumber} not found`);
+        } else {
+          const { ip_address, locks, leds } = selectedLocker;
+          if (ip_address && locks && leds) {
+            // Trigger locker and LED in the background
+            triggerLockerAndLed(ip_address, locks, leds)
+              .then(() => new Promise((resolve) => setTimeout(resolve, BLINK_DURATION)))
+              .then(() => syncLeds())
+              .catch((error) => {
+                console.error('Background LED/sync error:', error);
+                // Do not affect UI; submission is already successful
+              });
+          } else {
+            console.warn('Locker missing ip_address, locks, or leds; skipping trigger');
+          }
+        }
+      }
+
+      // Step 4: Close form after 10 seconds
       setTimeout(() => onClose(), 10000);
     } catch (error) {
       console.error('Error processing reception:', error);
@@ -309,26 +320,26 @@ const ReceiveForm = ({ onClose }) => {
 
   useEffect(() => {
     const mainContainer = document.querySelector('.main-container');
-  
+
     const handleFocus = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
         mainContainer.style.paddingBottom = '300px'; // Match keyboard height
       }
     };
-  
+
     const handleBlur = () => {
       mainContainer.style.paddingBottom = '0px';
     };
-  
+
     // Check if input is focused on mount
     const activeElement = document.activeElement;
     if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA') {
       mainContainer.style.paddingBottom = '300px'; // Apply padding immediately
     }
-  
+
     document.addEventListener('focusin', handleFocus);
     document.addEventListener('focusout', handleBlur);
-  
+
     return () => {
       document.removeEventListener('focusin', handleFocus);
       document.removeEventListener('focusout', handleBlur);

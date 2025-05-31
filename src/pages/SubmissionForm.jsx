@@ -6,7 +6,7 @@ import Button from '../pages/components/Button';
 import SelectRecipient from './SelectRecipient';
 import SelectLocker from './SelectLocker';
 import { validateEmail, validateRequired, validateLockerNumber } from '../utils/validators';
-import { syncLeds } from '../utils/ledSync'; // Assuming this function is defined in ledSync.js
+import { syncLeds } from '../utils/ledSync';
 
 // SVG Icons (unchanged)
 const SendMailIcon = () => (
@@ -158,7 +158,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       console.log(`Successfully ${skipLock ? 'skipped lock and' : ''} triggered ${lock} and set ${led} at ${ipAddress}`);
     } catch (error) {
       console.error('Error triggering locker/LED:', error);
-      throw error;
+      // Do not throw; allow UI to remain in success state
     }
   };
 
@@ -199,15 +199,23 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
       const savedData = await activityResponse.json();
 
-      // Step 3: Trigger locker and LED
+      // Step 3: Transition to success state immediately
+      setSubmissionStatus('success');
+
+      // Step 4: Trigger locker and LED in the background
       const { ip_address, locks, leds } = selectedLocker;
       if (ip_address && leds) {
-        // Skip lock trigger if skipTrigger is true, but always trigger LED
-        await triggerLockerAndLed(ip_address, locks, leds, savedData.skipTrigger);
-        // Wait for 5 blinks (500ms on + 500ms off per blink, 5 blinks = 5000ms)
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        // Sync LEDs after the blink delay
-        await syncLeds();
+        // Start LED blinking and sync without awaiting
+        triggerLockerAndLed(ip_address, locks, leds, savedData.skipTrigger)
+          .then(() => {
+            // Wait for 5 blinks (500ms on + 500ms off per blink, 5 blinks = 5000ms)
+            return new Promise((resolve) => setTimeout(resolve, 5000));
+          })
+          .then(() => syncLeds())
+          .catch((error) => {
+            console.error('Background LED/sync error:', error);
+            // Do not affect UI; submission is already successful
+          });
       } else {
         console.warn('Locker missing ip_address or leds; skipping trigger');
       }
@@ -216,8 +224,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         console.log('Skipped locker trigger as locker is already assigned to the same recipient');
       }
 
-      // Step 4: Mark as successful
-      setSubmissionStatus('success');
+      // Step 5: Navigate to next step after 10 seconds
       setTimeout(() => onNext({ ...formData, activity_log_id: savedData.id }), 10000);
     } catch (error) {
       console.error('Error submitting form:', error);
