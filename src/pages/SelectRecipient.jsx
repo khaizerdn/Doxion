@@ -101,7 +101,7 @@ const SelectRecipient = ({ onSelect, onBack }) => {
       // Combine lists: assigned recipients first, then unassigned
       const items = [...assignedItems, ...unassignedItems];
   
-      setRecipientItems(items);
+      setRecipientItems(items.sort((a, b) => a.name.localeCompare(b.name)));
     } catch (err) {
       console.error('Error fetching recipients:', err);
       setError(err.message);
