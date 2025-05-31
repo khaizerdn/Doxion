@@ -64,7 +64,7 @@ const GlobalKeyboardProvider = () => {
   };
 
   const focusNextInput = (currentInput) => {
-    // Get all focusable input and textarea elements in the DOM
+    // Get all focusable input and textarea elements in the DOMs
     const focusableElements = Array.from(
       document.querySelectorAll('input, textarea')
     ).filter((el) => !el.disabled && !el.readOnly);
