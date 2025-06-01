@@ -143,9 +143,16 @@ function Lockers() {
       const response = await fetch('http://localhost:5000/api/espdetected');
       if (!response.ok) throw new Error('Failed to fetch ESP devices');
       const data = await response.json();
-      // Sort devices by detected_at in ascending order (oldest first)
-      const sortedData = data.sort((a, b) => new Date(a.detected_at) - new Date(b.detected_at));
-      setEspDevices(sortedData);
+      // Group by locks and select the most recent record
+      const latestDevices = Object.values(
+        data.reduce((acc, device) => {
+          if (!acc[device.locks] || new Date(device.detected_at) > new Date(acc[device.locks].detected_at)) {
+            acc[device.locks] = device;
+          }
+          return acc;
+        }, {})
+      );
+      setEspDevices(latestDevices);
     } catch (error) {
       console.error('Error fetching ESP devices:', error);
     }
