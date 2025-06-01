@@ -118,11 +118,13 @@ function Lockers() {
   const [formData, setFormData] = useState({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
   const [errors, setErrors] = useState({ number: '', device: '' });
   const [loading, setLoading] = useState(false);
+  const [backendIp, setBackendIp] = useState(''); // New state for backend IP
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     fetchLockers();
     fetchEspDevices();
+    fetchBackendIp(); // Fetch backend IP on mount
   }, []);
 
   const fetchLockers = async () => {
@@ -146,6 +148,19 @@ function Lockers() {
       setEspDevices(sortedData);
     } catch (error) {
       console.error('Error fetching ESP devices:', error);
+    }
+  };
+
+  // New function to fetch backend IP
+  const fetchBackendIp = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/get-ip');
+      if (!response.ok) throw new Error('Failed to fetch backend IP');
+      const data = await response.json();
+      setBackendIp(data.ip_address);
+    } catch (error) {
+      console.error('Error fetching backend IP:', error);
+      setBackendIp('Unable to detect IP');
     }
   };
 
@@ -394,6 +409,9 @@ function Lockers() {
           </div>
         ) : (
           <div style={{ width: '100%' }}>
+            <p style={{ marginBottom: '10px', color: 'var(--color-muted-dark)' }}>
+              Backend IPv4: {backendIp || 'Loading...'}
+            </p>
             <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', width: '100%' }}>
               {listItems.map((item) => (
                 <LockerItem key={item.id} item={item} onEdit={handleEdit} espDevices={espDevices} />

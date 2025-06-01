@@ -5,6 +5,7 @@ import cors from 'cors';
 import { Snowflake } from 'nodejs-snowflake';
 import mysql from 'mysql2/promise';
 import fetch from 'node-fetch';
+import os from 'os';
 
 dotenv.config();
 
@@ -695,6 +696,25 @@ app.post('/api/admin/verify-pin', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         handleDbError(res, error);
+    }
+});
+
+app.get('/api/get-ip', (req, res) => {
+    try {
+        const interfaces = os.networkInterfaces();
+        let ipAddress = '127.0.0.1'; // Default to localhost
+        for (const iface of Object.values(interfaces)) {
+        for (const details of iface) {
+            if (details.family === 'IPv4' && !details.internal) {
+            ipAddress = details.address;
+            break;
+            }
+        }
+        }
+        res.json({ ip_address: ipAddress });
+    } catch (error) {
+        console.error('Error fetching IP address:', error);
+        res.status(500).json({ error: 'Failed to fetch IP address', details: error.message });
     }
 });
 
