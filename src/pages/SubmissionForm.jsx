@@ -5,7 +5,7 @@ import Input from '../pages/components/Input';
 import Button from '../pages/components/Button';
 import SelectRecipient from './SelectRecipient';
 import SelectLocker from './SelectLocker';
-import { validateEmail, validateRequired, validateLockerNumber } from '../utils/validators';
+import { validateRequired, validateLockerNumber } from '../utils/validators';
 import { syncLeds } from '../utils/ledSync';
 
 // SVG Icons (unchanged)
@@ -133,8 +133,13 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
   }, [view, scrollPosition]);
 
   const validateForm = () => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     const newErrors = {
-      recipientEmail: validateEmail(formData.recipientEmail).error,
+      recipientEmail: !formData.recipientEmail
+        ? 'Email is required'
+        : !emailRegex.test(formData.recipientEmail)
+        ? 'Please enter a valid email address'
+        : '',
       note: validateRequired(formData.note, 'Note').error,
       lockerNumber: validateLockerNumber(formData.lockerNumber).error,
     };
