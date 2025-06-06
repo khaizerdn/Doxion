@@ -118,6 +118,8 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     setFormData((prev) => ({
       ...prev,
       ...newData,
+      recipientDisplay: newData.recipientEmail, // Default to email
+      ...(newData.name && { recipientDisplay: newData.name }), // Override with name if available
     }));
     setErrors((prev) => ({
       ...prev,
@@ -421,25 +423,25 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       <h2>Submission Form</h2>
       <p style={{ marginBottom: '10px' }}>Please fill up the form below to proceed.</p>
       <div className="input-wrapper" tabIndex={0}>
-        <Input
-          placeholder="Recipient Email Address"
-          value={formData.recipientEmail}
-          onChange={handleChange('recipientEmail')}
-          emailError={errors.recipientEmail}
-          className="input-field"
-          aria-label="Recipient Email Address"
-        />
-        <div
-          className="select-icon"
-          title="Select Recipient"
-          onClick={() => handleViewChange('recipient')}
-          role="button"
-          aria-label="Select Recipient"
-          tabIndex={0}
-          onKeyPress={(e) => e.key === 'Enter' && handleViewChange('recipient')}
-        >
-          <SendMailIcon />
-        </div>
+          <Input
+        placeholder="Recipient Email Address"
+        value={formData.recipientDisplay || formData.recipientEmail} // Use recipientDisplay, fallback to recipientEmail
+        onChange={handleChange('recipientEmail')}
+        emailError={errors.recipientEmail}
+        className="input-field"
+        aria-label="Recipient Email Address"
+      />
+      <div
+        className="select-icon"
+        title="Select Recipient"
+        onClick={() => handleViewChange('recipient')}
+        role="button"
+        aria-label="Select Recipient"
+        tabIndex={0}
+        onKeyPress={(e) => e.key === 'Enter' && handleViewChange('recipient')}
+      >
+        <SendMailIcon />
+      </div>
       </div>
       {errors.recipientEmail && <p className="error-message" aria-live="polite">{errors.recipientEmail}</p>}
 

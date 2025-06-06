@@ -113,6 +113,7 @@ const SelectRecipient = ({ onSelect, onBack }) => {
   const handleSelect = (item) => {
     const updateData = { 
       recipientEmail: item.email,
+      name: item.name, // Pass the name for display
       lockerNumber: item.assignedLocker || '', // Use the specific locker or empty string if none
     };
     onSelect(updateData);
