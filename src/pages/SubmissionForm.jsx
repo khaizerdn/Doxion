@@ -5,10 +5,11 @@ import Input from '../pages/components/Input';
 import Button from '../pages/components/Button';
 import SelectRecipient from './SelectRecipient';
 import SelectLocker from './SelectLocker';
+import SelectDocumentType from './SelecDocumentType';
 import { validateRequired, validateLockerNumber } from '../utils/validators';
 import { syncLeds } from '../utils/ledSync';
 
-// SVG Icons (unchanged)
+// SVG Icons
 const SendMailIcon = () => (
   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -79,7 +80,7 @@ const FailureIcon = () => (
   </svg>
 );
 
-// Randomized success messages (unchanged)
+// Randomized success messages
 const getRandomSuccessMessage = (lockerNumber) => {
   const messages = [
     `You can now put your document in locker ${lockerNumber}! I hope the recipient doesn't get angry after reading it... 😨`,
@@ -95,17 +96,18 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     recipientEmail: initialData.recipientEmail || '',
     note: initialData.note || '',
     lockerNumber: initialData.lockerNumber || '',
+    documentType: initialData.documentType || '',
   });
   const [errors, setErrors] = useState({
     recipientEmail: '',
     note: '',
     lockerNumber: '',
+    documentType: '',
     general: '',
   });
   const [view, setView] = useState('form');
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [submissionStatus, setSubmissionStatus] = useState('idle'); // 'idle', 'loading', 'success', 'failure'
-  const [submissionError, setSubmissionError] = useState('');
+  const [submissionStatus, setSubmissionStatus] = useState('idle');
 
   const handleChange = useCallback((field) => (e) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -115,8 +117,14 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
   const handleFieldUpdate = useCallback((newData) => {
     setFormData((prev) => ({
       ...prev,
-      lockerNumber: newData.lockerNumber || prev.lockerNumber,
-      recipientEmail: newData.recipientEmail || prev.recipientEmail,
+      ...newData,
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      ...Object.keys(newData).reduce((acc, key) => {
+        acc[key] = '';
+        return acc;
+      }, {}),
     }));
     setView('form');
   }, []);
@@ -142,6 +150,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         : '',
       note: validateRequired(formData.note, 'Note').error,
       lockerNumber: validateLockerNumber(formData.lockerNumber).error,
+      documentType: !formData.documentType ? 'Document type is required' : '',
     };
     setErrors((prev) => ({ ...prev, ...newErrors }));
     return Object.values(newErrors).every((error) => !error);
@@ -163,7 +172,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       console.log(`Successfully ${skipLock ? 'skipped lock and' : ''} triggered ${lock} and set ${led} at ${ipAddress}`);
     } catch (error) {
       console.error('Error triggering locker/LED:', error);
-      // Do not throw; allow UI to remain in success state
     }
   };
 
@@ -172,7 +180,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
     setSubmissionStatus('loading');
     try {
-      // Step 1: Fetch locker details
       const lockerResponse = await fetch('http://127.0.0.1:5000/api/lockers');
       if (!lockerResponse.ok) throw new Error('Failed to fetch lockers');
       const lockers = await lockerResponse.json();
@@ -182,12 +189,12 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         throw new Error(`Locker ${formData.lockerNumber} not found`);
       }
 
-      // Step 2: Submit activity log
       const submissionData = {
         email: initialData.email || '',
         recipientEmail: formData.recipientEmail,
         note: formData.note,
         lockerNumber: formData.lockerNumber,
+        documentType: formData.documentType,
         date_received: null,
       };
 
@@ -204,37 +211,20 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
       const savedData = await activityResponse.json();
 
-      // Step 3: Transition to success state immediately
       setSubmissionStatus('success');
 
-      // Step 4: Trigger locker and LED in the background
       const { ip_address, locks, leds } = selectedLocker;
       if (ip_address && leds) {
-        // Start LED blinking and sync without awaiting
         triggerLockerAndLed(ip_address, locks, leds, savedData.skipTrigger)
-          .then(() => {
-            // Wait for 5 blinks (500ms on + 500ms off per blink, 5 blinks = 5000ms)
-            return new Promise((resolve) => setTimeout(resolve, 5000));
-          })
+          .then(() => new Promise((resolve) => setTimeout(resolve, 5000)))
           .then(() => syncLeds())
-          .catch((error) => {
-            console.error('Background LED/sync error:', error);
-            // Do not affect UI; submission is already successful
-          });
-      } else {
-        console.warn('Locker missing ip_address or leds; skipping trigger');
+          .catch((error) => console.error('Background LED/sync error:', error));
       }
 
-      if (savedData.skipTrigger) {
-        console.log('Skipped locker trigger as locker is already assigned to the same recipient');
-      }
-
-      // Step 5: Navigate to next step after 10 seconds
       setTimeout(() => onNext({ ...formData, activity_log_id: savedData.id }), 10000);
     } catch (error) {
       console.error('Error submitting form:', error);
       setSubmissionStatus('failure');
-      setSubmissionError(error.message || 'Network error occurred');
     }
   };
 
@@ -246,7 +236,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       height: var(--global-input-height);
       margin: 10px 0;
       border: 1px solid ${
-        errors.recipientEmail || errors.lockerNumber ? 'var(--color-error)' : 'var(--elevation-3)'
+        errors.recipientEmail || errors.lockerNumber || errors.documentType ? 'var(--color-error)' : 'var(--elevation-3)'
       };
       border-radius: var(--global-border-radius);
       background-color: var(--elevation-1);
@@ -256,7 +246,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     }
     .input-wrapper:focus-within {
       border-color: ${
-        errors.recipientEmail || errors.lockerNumber ? 'var(--color-error)' : 'var(--color-primary)'
+        errors.recipientEmail || errors.lockerNumber || errors.documentType ? 'var(--color-error)' : 'var(--color-primary)'
       };
     }
     .input-wrapper .input-field {
@@ -284,6 +274,34 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
     .input-wrapper .select-icon:hover {
       background-color: var(--elevation-2);
     }
+    .select-button {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      height: var(--global-input-height);
+      margin: 10px 0;
+      background-color: var(--elevation-1);
+      border: 1px solid var(--elevation-3);
+      border-radius: var(--global-border-radius);
+      cursor: pointer;
+      transition: background-color 0.2s ease, border-color 0.3s ease;
+      padding: 30px;
+      font-size: var(--font-size-2);
+      color: #DADBDA;
+    }
+    .select-button.selected {
+      color: var(--color-muted-dark);
+    }
+    .select-button.error {
+      border-color: var(--color-error);
+    }
+    .select-button:focus:not(.error) {
+      border-color: var(--color-primary);
+    }
+    .select-button:hover {
+      background-color: var(--elevation-2);
+    }
     .textarea-note {
       width: 100%;
       min-height: 400px;
@@ -300,7 +318,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       outline: none;
       transition: border-color 0.3s ease;
       text-align: left;
-      line-height: normal;
+      lineHeight: normal;
       box-sizing: border-box;
     }
     .textarea-note:focus {
@@ -376,7 +394,6 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         <FailureIcon />
         <h2>Failed Submission</h2>
         <p>There is an error with your submission, please resubmit or call for assistance.</p>
-        {submissionError && <p>{submissionError}</p>}
       </div>
     );
   }
@@ -386,6 +403,9 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
   }
   if (view === 'locker') {
     return <SelectLocker onSelect={handleFieldUpdate} onBack={() => handleViewChange('form')} />;
+  }
+  if (view === 'documentType') {
+    return <SelectDocumentType onSelect={handleFieldUpdate} onBack={() => handleViewChange('form')} />;
   }
 
   return (
@@ -438,6 +458,17 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
         </div>
       </div>
       {errors.lockerNumber && <p className="error-message" aria-live="polite">{errors.lockerNumber}</p>}
+
+      <div
+        className={`select-button ${formData.documentType ? 'selected' : ''} ${errors.documentType ? 'error' : ''}`}
+        onClick={() => handleViewChange('documentType')}
+        role="button"
+        tabIndex={0}
+        onKeyPress={(e) => e.key === 'Enter' && handleViewChange('documentType')}
+      >
+        {formData.documentType || 'Select Document Type'}
+      </div>
+      {errors.documentType && <p className="error-message" aria-live="polite">{errors.documentType}</p>}
 
       <textarea
         className="textarea-note"

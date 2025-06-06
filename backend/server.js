@@ -361,12 +361,13 @@ app.delete('/api/recipients/:id', async (req, res) => {
 
 // POST /api/activitylogs
 app.post('/api/activitylogs', async (req, res) => {
-    const { email, recipientEmail, note, lockerNumber, date_received } = req.body;
+    const { email, recipientEmail, note, lockerNumber, documentType, date_received } = req.body;
   
     if (!email) return res.status(400).json({ error: 'Sender email is required' });
     if (!recipientEmail) return res.status(400).json({ error: 'Recipient email is required' });
     if (!note) return res.status(400).json({ error: 'Note is required' });
     if (!lockerNumber) return res.status(400).json({ error: 'Locker number is required' });
+    if (!documentType) return res.status(400).json({ error: 'Document type is required' });
   
     const id = uid.getUniqueID().toString();
     const otp = generateOTP();
@@ -397,8 +398,8 @@ app.post('/api/activitylogs', async (req, res) => {
   
       // Insert new activity log
       const [result] = await pool.execute(
-        'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, otp, date_received) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [id, email, recipientEmail, note, lockerNumber, otp, date_received || null]
+        'INSERT INTO activitylogs (id, email, recipientEmail, note, lockerNumber, documentType, otp, date_received) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [id, email, recipientEmail, note, lockerNumber, documentType, otp, date_received || null]
       );
   
       if (result.affectedRows === 1) {
@@ -416,7 +417,7 @@ app.post('/api/activitylogs', async (req, res) => {
           to: recipientEmail,
           subject: `New Doxion Submission`,
           text: `Dear Recipient,\n\n` +
-                `A new document has been submitted to you via Doxion's Locker. Please use the following OTP to retrieve it securely:\n\n` +
+                `A new document of type "${documentType}" has been submitted to you via Doxion's Locker. Please use the following OTP to retrieve it securely:\n\n` +
                 `${formattedDateTime}\n` +
                 `Locker Number: ${lockerNumber}\n` +
                 `OTP: ${otp}\n` +
@@ -430,7 +431,7 @@ app.post('/api/activitylogs', async (req, res) => {
           to: email,
           subject: 'Document Successfully Submitted',
           text: `Dear Sender,\n\n` +
-                `Your document was successfully submitted. You will be notified once the recipient retrieves it:\n\n` +
+                `Your document of type "${documentType}" was successfully submitted. You will be notified once the recipient retrieves it:\n\n` +
                 `${formattedDateTime}\n` +
                 `Locker Number: ${lockerNumber}\n` +
                 `To: ${recipientEmail}\n` +
@@ -453,6 +454,7 @@ app.post('/api/activitylogs', async (req, res) => {
           recipientEmail,
           note,
           lockerNumber,
+          documentType,
           date_received: date_received || null,
           created_at: new Date().toISOString(),
           skipTrigger, // Indicate whether to skip locker/LED trigger
@@ -472,7 +474,7 @@ app.post('/api/activitylogs', async (req, res) => {
 app.get('/api/activitylogs', async (req, res) => {
     try {
         const [rows] = await pool.execute(
-            'SELECT id, email, recipientEmail, note, lockerNumber, created_at, date_received FROM activitylogs'
+            'SELECT id, email, recipientEmail, note, lockerNumber, documentType, created_at, date_received FROM activitylogs'
         );
         res.json(rows);
     } catch (error) {
@@ -492,7 +494,7 @@ app.put('/api/activitylogs/:id/receive', async (req, res) => {
             return res.status(404).json({ error: 'Activity log not found or already received' });
         }
         const [updatedRows] = await pool.execute(
-            'SELECT id, email, recipientEmail, note, lockerNumber, created_at, date_received FROM activitylogs WHERE id = ?',
+            'SELECT id, email, recipientEmail, note, lockerNumber, documentType, created_at, date_received FROM activitylogs WHERE id = ?',
             [id]
         );
         res.json(updatedRows[0]);

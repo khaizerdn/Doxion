@@ -273,6 +273,7 @@ function ActivityLogs() {
                 </div>
                 <div className="overview-body">
                   <p><span className="label">Locker:</span> {selectedLog.lockerNumber}</p>
+                  <p><span className="label">Document Type:</span> {selectedLog.documentType || 'N/A'}</p>
                   <p><span className="label">Sent:</span> {formatDateTime(selectedLog.created_at)}</p>
                   <p><span className="label">Note:</span> {selectedLog.note || 'N/A'}</p>
                 </div>
@@ -286,6 +287,7 @@ function ActivityLogs() {
                 </div>
                 <div className="overview-body">
                   <p><span className="label">Locker:</span> {selectedLog.lockerNumber}</p>
+                  <p><span className="label">Document Type:</span> {selectedLog.documentType || 'N/A'}</p>
                   <p><span className="label">Received:</span> {formatDateTime(selectedLog.date_received)}</p>
                   <p><span className="label">Note:</span> {selectedLog.note || 'N/A'}</p>
                 </div>
