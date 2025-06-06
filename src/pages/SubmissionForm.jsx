@@ -206,7 +206,9 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
 
       if (!activityResponse.ok) {
         const errorData = await activityResponse.json();
-        throw new Error(errorData.error || 'Failed to submit activity log');
+        const error = new Error(errorData.error || 'Failed to submit activity log');
+        error.status = activityResponse.status;
+        throw error;
       }
 
       const savedData = await activityResponse.json();
@@ -224,7 +226,12 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
       setTimeout(() => onNext({ ...formData, activity_log_id: savedData.id }), 10000);
     } catch (error) {
       console.error('Error submitting form:', error);
-      setSubmissionStatus('failure');
+      if (error.status === 409) {
+        setErrors((prev) => ({ ...prev, lockerNumber: error.message }));
+        setSubmissionStatus('idle');
+      } else {
+        setSubmissionStatus('failure');
+      }
     }
   };
 
