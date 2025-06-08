@@ -61,10 +61,7 @@ const LoadingIcon = () => {
 // Randomized success messages
 const getRandomSuccessMessage = (lockerNumber) => {
   const messages = [
-    `You may now retrieve the documents in locker ${lockerNumber}! I hope it doesn't make you angry after reading it... 😨`,
-    `You may now retrieve the documents in locker ${lockerNumber}! Wishing they don’t make you feel sad after reading it... 😢`,
-    `You may now retrieve the documents in locker ${lockerNumber}! Prepare to be amazed after reading it 😮`,
-    `You may now retrieve the documents inก่อนหน้านี้ ${lockerNumber}! Maybe they’ll make you laugh after reading it 😂`,
+    `You may now retrieve the documents in locker ${lockerNumber}!`,
   ];
   return messages[Math.floor(Math.random() * messages.length)];
 };
@@ -362,7 +359,7 @@ const ReceiveForm = ({ onClose }) => {
       <div className="status-container">
         <style>{styles}</style>
         <SuccessIcon />
-        <h2>Document Found</h2>
+        <h2>Retrieve Document in Locker {formData.lockerNumber}!</h2>
         <p>{getRandomSuccessMessage(formData.lockerNumber)}</p>
       </div>
     );
