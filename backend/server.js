@@ -413,27 +413,29 @@ app.post('/api/activitylogs', async (req, res) => {
         });
   
         const recipientMailOptions = {
-          from: `"Doxion" <${process.env.EMAIL_USER}>`,
-          to: recipientEmail,
-          subject: `New Doxion Submission`,
-          text: `Dear Recipient,\n\n` +
+        from: `"Doxion" <${process.env.EMAIL_USER}>`,
+        to: recipientEmail,
+        subject: `New Doxion Submission`,
+        text: `Dear Recipient,\n\n` +
                 `A new document of type "${documentType}" has been submitted to you via Doxion's Locker. Please use the following OTP to retrieve it securely:\n\n` +
                 `${formattedDateTime}\n` +
                 `Locker Number: ${lockerNumber}\n` +
+                `Document Type: ${documentType}\n` + // Added documentType
                 `OTP: ${otp}\n` +
                 `From: ${email}\n\n` +
                 `Document:\n${note}\n\n` +
                 `This is an automated message. Please do not reply directly to this email.`,
         };
-  
+        
         const senderMailOptions = {
-          from: `"Doxion" <${process.env.EMAIL_USER}>`,
-          to: email,
-          subject: 'Document Successfully Submitted',
-          text: `Dear Sender,\n\n` +
+        from: `"Doxion" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Document Successfully Submitted',
+        text: `Dear Sender,\n\n` +
                 `Your document of type "${documentType}" was successfully submitted. You will be notified once the recipient retrieves it:\n\n` +
                 `${formattedDateTime}\n` +
                 `Locker Number: ${lockerNumber}\n` +
+                `Document Type: ${documentType}\n` + // Added documentType
                 `To: ${recipientEmail}\n` +
                 `OTP: ${otp}\n\n` +
                 `Note:\n${note}\n\n` +
@@ -530,7 +532,7 @@ app.post('/api/receive', async (req, res) => {
         }
 
         const [updatedRows] = await pool.execute(
-            'SELECT id, email, recipientEmail, note, lockerNumber FROM activitylogs WHERE lockerNumber = ? AND date_received IS NOT NULL AND DATE(date_received) = DATE(NOW())',
+            'SELECT id, email, recipientEmail, note, lockerNumber, documentType FROM activitylogs WHERE lockerNumber = ? AND date_received IS NOT NULL AND DATE(date_received) = DATE(NOW())',
             [lockerNumber]
         );
 
@@ -549,9 +551,10 @@ app.post('/api/receive', async (req, res) => {
                 to: log.email,
                 subject: 'Document Retrieved',
                 text: `Dear Sender,\n\n` +
-                      `Your document submitted to ${log.recipientEmail} has been successfully retrieved:\n\n` +
+                      `Your document of type "${log.documentType}" submitted to ${log.recipientEmail} has been successfully retrieved:\n\n` +
                       `${formattedDateTime}\n` +
-                      `Locker Number: ${log.lockerNumber}\n\n` +
+                      `Locker Number: ${log.lockerNumber}\n` +
+                      `Document Type: ${log.documentType}\n` + // Added documentType
                       `Note:\n${log.note}\n\n` +
                       `This is an automated message. Please do not reply directly to this email.`,
             };
