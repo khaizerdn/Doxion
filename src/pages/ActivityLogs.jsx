@@ -115,7 +115,7 @@ function ActivityLogs() {
       display: flex;
       flex-direction: column;
       gap: 4px;
-      font-size: var(--font-size-4);
+      font-size: var(--font-size-5);
       color: var(--color-muted-dark);
     }
     .log-status {
@@ -245,6 +245,7 @@ function ActivityLogs() {
                       <div className="log-details">
                         <div>From: {log.email}</div>
                         <div>To: {log.recipientEmail}</div>
+                        <div>Document Type: {log.documentType || 'N/A'}</div>
                       </div>
                     </div>
                     <div className="log-status">
