@@ -4,6 +4,7 @@ import Button from './components/Button';
 import Input from './components/Input';
 import { validateRequired } from '../utils/validators';
 import useKeyboardPadding from '../utils/useKeyboardPadding';
+import EspInstructions from '../assets/manual.png'; // Import the image
 
 const LockerItem = ({ item, onEdit, espDevices }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -118,13 +119,14 @@ function Lockers() {
   const [formData, setFormData] = useState({ id: null, number: '', device_name: '', ip_address: '', locks: '', leds: '' });
   const [errors, setErrors] = useState({ number: '', device: '' });
   const [loading, setLoading] = useState(false);
-  const [backendIp, setBackendIp] = useState(''); // New state for backend IP
+  const [backendIp, setBackendIp] = useState('');
+  const [showImageModal, setShowImageModal] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     fetchLockers();
     fetchEspDevices();
-    fetchBackendIp(); // Fetch backend IP on mount
+    fetchBackendIp();
   }, []);
 
   const fetchLockers = async () => {
@@ -158,7 +160,6 @@ function Lockers() {
     }
   };
 
-  // New function to fetch backend IP
   const fetchBackendIp = async () => {
     try {
       const response = await fetch('http://localhost:5000/api/get-ip');
@@ -300,6 +301,14 @@ function Lockers() {
     setView('form');
   };
 
+  const openImageModal = () => {
+    setShowImageModal(true);
+  };
+
+  const closeImageModal = () => {
+    setShowImageModal(false);
+  };
+
   const styles = `
     .action-button { 
       display: flex; 
@@ -338,18 +347,63 @@ function Lockers() {
       font-size: 0.875rem;
       margin-top: 5px;
     }
-    .header-container { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 50px; height: 100px; }
-    .title-container { display: flex; align-items: center; gap: 16px; }
+    .header-container { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      width: 100%; 
+      margin-bottom: 50px; 
+      height: 100px; 
+    }
+    .title-container { 
+      display: flex; 
+      align-items: center; 
+      gap: 16px; 
+    }
     .search-bar { 
       width: 400px; 
       height: 100px; 
     }
-    /* Override Input component styles for search bar */
     .search-bar.input-field {
       height: 100px;
       width: 400px;
       padding: 10px 20px;
       font-size: 1.5rem;
+    }
+    .esp-link {
+      font-size: var(--font-size-4);
+      color: var(--color-primary);
+      text-decoration: underline;
+      cursor: pointer;
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+    .image-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .image-modal-content {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+    .image-modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 2rem;
+      color: #fff;
+      cursor: pointer;
     }
   `;
 
@@ -416,6 +470,9 @@ function Lockers() {
           </div>
         ) : (
           <div style={{ width: '100%' }}>
+            <p style={{ marginBottom: '10px' }}>
+              <span className="esp-link" onClick={openImageModal}>How to connect ESP?</span>
+            </p>
             <p style={{ marginBottom: '10px', color: 'var(--color-muted-dark)' }}>
               Backend IPv4: {backendIp || 'Loading...'}
             </p>
@@ -424,6 +481,16 @@ function Lockers() {
                 <LockerItem key={item.id} item={item} onEdit={handleEdit} espDevices={espDevices} />
               ))}
             </ul>
+          </div>
+        )}
+        {showImageModal && (
+          <div className="image-modal" onClick={closeImageModal}>
+            <button className="image-modal-close" onClick={closeImageModal}>×</button>
+            <img
+              src={EspInstructions}
+              alt="ESP Connection Instructions"
+              className="image-modal-content"
+            />
           </div>
         )}
       </div>
