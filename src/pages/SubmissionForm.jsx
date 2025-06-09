@@ -222,7 +222,7 @@ const SubmissionForm = ({ onNext, onClose, initialData }) => {
           .catch((error) => console.error('Background LED/sync error:', error));
       }
 
-      setTimeout(() => onNext({ ...formData, activity_log_id: savedData.id }), 10000);
+      setTimeout(() => onNext({ ...formData, activity_log_id: savedData.id }), 15000);
     } catch (error) {
       console.error('Error submitting form:', error);
       if (error.status === 409) {

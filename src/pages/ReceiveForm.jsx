@@ -201,7 +201,7 @@ const ReceiveForm = ({ onClose }) => {
       }
 
       // Step 4: Close form after 10 seconds
-      setTimeout(() => onClose(), 10000);
+      setTimeout(() => onClose(), 15000);
     } catch (error) {
       console.error('Error processing reception:', error);
       setErrors((prev) => ({
